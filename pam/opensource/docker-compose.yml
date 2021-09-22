@@ -175,3 +175,4 @@ services:
 volumes:
    # pam volumes
    pam_static_volume:
+      
