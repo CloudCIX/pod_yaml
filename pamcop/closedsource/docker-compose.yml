@@ -314,7 +314,6 @@ services:
          - influxdb
          - jaeger
          - kibana
-         - logstash
          - pam
 
    # cop containers
