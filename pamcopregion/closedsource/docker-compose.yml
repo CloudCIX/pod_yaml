@@ -55,6 +55,7 @@ services:
          oob:
             ipv4_address: "10.${pod_id}.0.6"
       environment:
+         - ICARUS_URL=https://icarus.${POD_NAME}.${ORGANIZATION_URL}
          - PGSQLPAM_PASSWORD=${PGSQLPAM_PASSWORD}
          - PGSQLPAM_USER=${PGSQLPAM_USER}
          - POD_SECRET_KEY=${POD_SECRET_KEY}
