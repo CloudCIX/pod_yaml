@@ -102,7 +102,6 @@ services:
       depends_on:
          - mysqllibrenms
 
->>>>>>> 110f3663be399c2a39d6a66a546f30782ec068f8
    radius:
       image: asdaru/freeradius-mysql-daloradius:latest
       container_name: radius
