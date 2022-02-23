@@ -55,9 +55,14 @@ services:
          oob:
             ipv4_address: "10.${pod_id}.0.6"
       environment:
+         - DEV_USER=${DEV_USER}
          - ICARUS_URL=https://icarus.${POD_NAME}.${ORGANIZATION_URL}
+         - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}         
+         - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}         
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
          - PGSQLPAM_PASSWORD=${PGSQLPAM_PASSWORD}
          - PGSQLPAM_USER=${PGSQLPAM_USER}
+         - POD_NAME=${POD_NAME}
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - ROUTER_MANAGEMENT_IP=${ROUTER_MANAGEMENT_IP}
          - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
@@ -122,6 +127,126 @@ services:
          - USER=${JUMPHOST_USERNAME}
          - VNC_PASSWORD=${JUMPHOST_VNC_PASSWORD}
       restart: always
+
+   # Icarus
+   daedalus:
+      image: cloudcix/daedalus:latest
+      container_name: daedalus
+      depends_on:
+         - pgsqlpam
+      networks:
+         mgmt:
+            ipv6_address: "${IP6}d0c:3002:7"
+      environment:
+         - POSTGRES_PASSWORD=${PGSQLPAM_PASSWORD}
+         - POSTGRES_USER=${PGSQLPAM_USER}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+      healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost/regions/"]
+         interval: 10s
+         timeout: 5s
+         retries: 5
+
+   majora:
+      image: cloudcix/majora:latest
+      container_name: majora
+      networks:
+         mgmt:
+      depends_on:
+         - daedalus
+         - nginxpam
+
+   icarus:
+      image: cloudcix/icarus:latest
+      container_name: icarus
+      networks:
+         mgmt:
+            ipv6_address: "${IP6}d0c:3002:6"
+      depends_on:
+         - daedalus
+
+   # MinIO
+   # starts 4 docker containers running minio server instances.
+   # using nginx reverse proxy, load balancing, you can access it through port 9000.
+   minio1:
+      image: minio/minio:RELEASE.2021-06-17T00-10-46Z
+      container_name: minio1
+      networks:
+         mgmt:
+      environment:
+        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
+         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      expose:
+         - "9000"
+      volumes:
+         - minio1-data-1:/data1
+         - minio1-data-2:/data2
+      command: server http://minio{1...4}/data{1...2}
+      healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+         interval: 30s
+         timeout: 20s
+         retries: 3
+
+   minio2:
+      image: minio/minio:RELEASE.2021-06-17T00-10-46Z
+      container_name: minio2
+      networks:
+         mgmt:
+      environment:
+        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
+         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      expose:
+         - "9000"
+      volumes:
+         - minio2-data-1:/data1
+         - minio2-data-2:/data2
+      command: server http://minio{1...4}/data{1...2}
+      healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+         interval: 30s
+         timeout: 20s
+         retries: 3
+
+   minio3:
+      image: minio/minio:RELEASE.2021-06-17T00-10-46Z
+      container_name: minio3
+      networks:
+         mgmt:
+      environment:
+        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
+         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      expose:
+         - "9000"
+      volumes:
+         - minio3-data-1:/data1
+         - minio3-data-2:/data2
+      command: server http://minio{1...4}/data{1...2}
+      healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+         interval: 30s
+         timeout: 20s
+         retries: 3
+
+   minio4:
+      image: minio/minio:RELEASE.2021-06-17T00-10-46Z
+      container_name: minio4
+      networks:
+         mgmt:
+      environment:
+        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
+         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      expose:
+         - "9000"
+      volumes:
+         - minio4-data-1:/data1
+         - minio4-data-2:/data2
+      command: server http://minio{1...4}/data{1...2}
+      healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+         interval: 30s
+         timeout: 20s
+         retries: 3
 
    # Closedsource
    # ELK & Jaeger
@@ -227,43 +352,6 @@ services:
       depends_on:
          - influxdb
 
-   # Icarus
-   daedalus:
-      image: cloudcix/daedalus:latest
-      container_name: daedalus
-      depends_on:
-         - pgsqlpam
-      networks:
-         mgmt:
-            ipv6_address: "${IP6}d0c:3002:7"
-      environment:
-         - POSTGRES_PASSWORD=${PGSQLPAM_PASSWORD}
-         - POSTGRES_USER=${PGSQLPAM_USER}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-      healthcheck:
-         test: ["CMD", "curl", "-f", "http://localhost/regions/"]
-         interval: 10s
-         timeout: 5s
-         retries: 5
-
-   majora:
-      image: cloudcix/majora:latest
-      container_name: majora
-      networks:
-         mgmt:
-      depends_on:
-         - daedalus
-         - nginxpam
-
-   icarus:
-      image: cloudcix/icarus:latest
-      container_name: icarus
-      networks:
-         mgmt:
-            ipv6_address: "${IP6}d0c:3002:6"
-      depends_on:
-         - daedalus
-
    # NGINX
    nginxpam:
       image: nginx:1.19.2-alpine
@@ -286,11 +374,23 @@ services:
          - influxdb
          - jaeger
          - kibana
+         - minio1
+         - minio2
+         - minio3
+         - minio4
          - pam
 
 volumes:
    # pam volumes
    influxdb-storage:
    grafana-storage:
+   minio1-data-1:
+   minio1-data-2:
+   minio2-data-1:
+   minio2-data-2:
+   minio3-data-1:
+   minio3-data-2:
+   minio4-data-1:
+   minio4-data-2:
    pam_static_volume:
    radius-data:
