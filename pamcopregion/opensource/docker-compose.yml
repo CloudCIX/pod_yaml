@@ -174,8 +174,8 @@ services:
       networks:
          mgmt:
       environment:
-        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
-         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        -  MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+         - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
       expose:
          - "9000"
       volumes:
@@ -194,8 +194,8 @@ services:
       networks:
          mgmt:
       environment:
-        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
-         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        -  MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+         - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
       expose:
          - "9000"
       volumes:
@@ -214,8 +214,8 @@ services:
       networks:
          mgmt:
       environment:
-        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
-         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        -  MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+         - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
       expose:
          - "9000"
       volumes:
@@ -234,8 +234,8 @@ services:
       networks:
          mgmt:
       environment:
-        -  MINIO_ROOT_USER=${MINIO_ROOT_USER}
-         - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+        -  MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+         - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
       expose:
          - "9000"
       volumes:
