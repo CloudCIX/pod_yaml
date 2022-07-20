@@ -23,7 +23,6 @@ services:
          - EMAIL_PASSWORD=${REGION_EMAIL_PASSWORD}
          - EMAIL_PORT=${REGION_EMAIL_PORT}
          - EMAIL_USER=${REGION_EMAIL_USER}
-         - MGMT_IP=${ROUTER_MANAGEMENT_IP}
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
@@ -34,6 +33,7 @@ services:
          - ROBOT_API_KEY=${ROBOT_API_KEY}
          - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
          - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
+         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /home/administrator/celerybeat:/opt/robot/celerybeat
@@ -52,7 +52,6 @@ services:
          - EMAIL_PASSWORD=${REGION_EMAIL_PASSWORD}
          - EMAIL_PORT=${REGION_EMAIL_PORT}
          - EMAIL_USER=${REGION_EMAIL_USER}
-         - MGMT_IP=${ROUTER_MANAGEMENT_IP}
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
@@ -63,6 +62,7 @@ services:
          - ROBOT_API_KEY=${ROBOT_API_KEY}
          - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
          - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
+         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /etc/cloudcix/robot:/mnt/images
