@@ -64,7 +64,7 @@ services:
          - PGSQLPAM_USER=${PGSQLPAM_USER}
          - POD_NAME=${POD_NAME}
          - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - ROUTER_MANAGEMENT_IP=${ROUTER_MANAGEMENT_IP}
+         - ROUTER_MGMT_IP=${ROUTER_MGMT_IP}
          - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
          - VPN_PAM_PUBLIC_ADDRESS=${VPN_PAM_PUBLIC_ADDRESS}
       volumes:
@@ -613,7 +613,7 @@ services:
          - ROBOT_API_KEY=${ROBOT_API_KEY}
          - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
          - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
+         - ROUTER_MGMT_IP=${ROUTER_MGMT_IP}
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /home/administrator/celerybeat:/opt/robot/celerybeat
@@ -643,7 +643,7 @@ services:
          - ROBOT_API_KEY=${ROBOT_API_KEY}
          - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
          - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
+         - ROUTER_MGMT_IP=${ROUTER_MGMT_IP}
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /etc/cloudcix/robot:/mnt/images
