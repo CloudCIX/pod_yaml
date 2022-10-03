@@ -6,8 +6,8 @@ networks:
       enable_ipv6: true
       ipam:
          config:
-            - subnet: "${IP6}d0c:0:1/96"
-              gateway: "${IP6}d0c:0:1"
+            - subnet: "${DOCKER_MGMT_IP6}1/64"
+              gateway: "${DOCKER_MGMT_IP6}1"
    oob:
       driver: macvlan
       driver_opts:
@@ -24,7 +24,7 @@ services:
       container_name: pgsqlpam
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3004:5"
+            ipv6_address: "${DOCKER_MGMT_IP6}3004:5"
          oob:
             ipv4_address: "10.${pod_id}.0.7"
       environment:
@@ -38,7 +38,7 @@ services:
       container_name: pgadminpam
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:1"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:1"
       environment:
          - PGADMIN_DEFAULT_EMAIL=${PGADMINPAM_EMAIL}
          - PGADMIN_DEFAULT_PASSWORD=${PGADMINPAM_PASSWORD}
@@ -50,7 +50,7 @@ services:
       container_name: pam
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:4"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:4"
          oob:
             ipv4_address: "10.${pod_id}.0.6"
       environment:
@@ -81,7 +81,7 @@ services:
       container_name: radius
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3004:6"
+            ipv6_address: "${DOCKER_MGMT_IP6}3004:6"
          oob:
             ipv4_address: "10.${pod_id}.0.3"
       environment:
@@ -100,7 +100,7 @@ services:
       container_name: mysql-workbench
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:2"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:2"
          oob:
             ipv4_address: "10.${pod_id}.0.8"
       environment:
@@ -116,7 +116,7 @@ services:
       container_name: jumphost
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:3"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:3"
          oob:
             ipv4_address: "10.${pod_id}.0.5"
       environment:
@@ -135,7 +135,7 @@ services:
          - pgsqlpam
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:7"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:7"
       environment:
          - POSTGRES_PASSWORD=${PGSQLPAM_PASSWORD}
          - POSTGRES_USER=${PGSQLPAM_USER}
@@ -160,7 +160,7 @@ services:
       container_name: icarus
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3002:6"
+            ipv6_address: "${DOCKER_MGMT_IP6}3002:6"
       depends_on:
          - daedalus
    # MinIO
@@ -252,7 +252,7 @@ services:
       container_name: nginxpam
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:3004:a"
+            ipv6_address: "${DOCKER_MGMT_IP6}3004:a"
       environment:
          - POD_NAME=${POD_NAME}
          - ORGANIZATION_URL=${ORGANIZATION_URL}

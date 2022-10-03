@@ -6,8 +6,8 @@ networks:
       enable_ipv6: true
       ipam:
          config:
-            - subnet: "${IP6}d0c:0:1/96"
-              gateway: "${IP6}d0c:0:1"
+            - subnet: "${DOCKER_MGMT_IP6}1/64"
+              gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
    robot:
@@ -15,7 +15,7 @@ services:
       container_name: robot
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:6001:1"
+            ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
       environment:
          - COP_NAME=${COP_NAME}
          - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
@@ -73,7 +73,7 @@ services:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/root/.ssh/id_rsa.pub
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:6001:2"
+            ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
 
    rabbitmq:
@@ -88,7 +88,7 @@ services:
       container_name: flowerregion
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:6002:4"
+            ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
       ports:
          - "${PMS6}:5555:5555"
       entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
