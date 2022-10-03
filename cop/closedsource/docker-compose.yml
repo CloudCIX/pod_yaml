@@ -6,8 +6,8 @@ networks:
       enable_ipv6: true
       ipam:
          config:
-            - subnet: "${IP6}d0c:0:1/96"
-              gateway: "${IP6}d0c:0:1"
+            - subnet: "${DOCKER_MGMT_IP6}1/64"
+              gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
    membershipldap:
@@ -82,7 +82,7 @@ services:
          - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:4004:1"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}:/application_framework/private-key.rsa
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
@@ -116,7 +116,7 @@ services:
          - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:4004:2"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -158,7 +158,7 @@ services:
       container_name: iaas
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:4004:3"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:3"
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
          - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
@@ -206,7 +206,7 @@ services:
          - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:4004:4"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -237,7 +237,7 @@ services:
          - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:5002:4"
+            ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/app_framework/system_conf/public-key.rsa
          - cop_static_content:/static
@@ -248,14 +248,14 @@ services:
       container_name: apachedscop
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:5002:2"
+            ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
 
    pgadmincop:
       image: dpage/pgadmin4
       container_name: pgadmincop
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:5002:1"
+            ipv6_address: "${DOCKER_MGMT_IP6}5002:1"
       environment:
          - PGADMIN_DEFAULT_EMAIL=${PGADMINCOP_EMAIL}
          - PGADMIN_DEFAULT_PASSWORD=${PGADMINCOP_PASSWORD}
@@ -320,7 +320,7 @@ services:
       container_name: nginxcop
       networks:
          mgmt:
-            ipv6_address: "${IP6}d0c:4004:a"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:a"
       environment:
          - ORGANIZATION_URL=${ORGANIZATION_URL}
          - POD_NAME=${POD_NAME}
