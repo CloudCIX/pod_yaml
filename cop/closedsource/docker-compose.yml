@@ -331,7 +331,7 @@ services:
       volumes:
          - ./templates/cop:/etc/nginx/templates
          - /etc/nginx/certs:/etc/nginx/certs
-         - cop_static_content:/static
+         - cop_static_content:/app_framework/static
       depends_on:
          - membership
          - otp
