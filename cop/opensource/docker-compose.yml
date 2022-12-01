@@ -10,6 +10,7 @@ networks:
               gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
+
    membershipldap:
       image: osixia/openldap
       container_name: membershipldap
@@ -82,9 +83,6 @@ services:
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
-            aliases:
-              - "membership"
-              - "membership.${PORTAL_NAME}.${ORGANIZATION_URL}"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}:/application_framework/private-key.rsa
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
@@ -118,9 +116,6 @@ services:
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
-            aliases:
-              - "otp"
-              - "otp.${PORTAL_NAME}.${ORGANIZATION_URL}"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -162,9 +157,6 @@ services:
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:3"
-            aliases:
-              - "iaas"
-              - "iaas.${PORTAL_NAME}.${ORGANIZATION_URL}"
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
          - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
@@ -188,9 +180,9 @@ services:
       depends_on:
          - pgsqlapi
             
-   appmanager:
-      image: cloudcix/appmanager:latest
-      container_name: appmanager
+   support:
+      image: cloudcix/support:latest
+      container_name: support
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
          - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
@@ -210,10 +202,7 @@ services:
          - RELEASE=stable
       networks:
          mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
-            aliases:
-              - "appmanager"
-              - "appmanager.${PORTAL_NAME}.${ORGANIZATION_URL}"
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -244,9 +233,6 @@ services:
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
-            aliases:
-              - "cop"
-              - "${PORTAL_NAME}.${ORGANIZATION_URL}"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/app_framework/system_conf/public-key.rsa
          - cop_static_content:/static
@@ -340,6 +326,7 @@ services:
          - iaas
          - appmanager
          - cop
+         - support
 
 volumes:
    cop_static_content:
