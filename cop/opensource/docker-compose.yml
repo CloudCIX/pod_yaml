@@ -200,7 +200,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
