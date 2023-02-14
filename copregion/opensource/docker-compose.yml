@@ -56,7 +56,7 @@ services:
          - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
       volumes:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
-      
+
    pgsqltotp:
       image: cloudcix/pgsqltotp:latest
       container_name: pgsqltotp
@@ -130,7 +130,7 @@ services:
       restart: on-failure
       depends_on:
          - pgsqltotp
-         
+
    user_expiration_cron:
       image: cloudcix/membershipcron:latest
       container_name: user_expiration_cron
@@ -188,7 +188,7 @@ services:
       restart: on-failure
       depends_on:
          - pgsqlapi
-            
+
    appmanager:
       image: cloudcix/appmanager:latest
       container_name: appmanager
@@ -212,6 +212,64 @@ services:
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
+   asset:
+      image: cloudcix/asset:latest
+      container_name: asset
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:9"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
+   financial:
+      image: cloudcix/financial:latest
+      container_name: financial
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:6"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -304,7 +362,7 @@ services:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/app_framework/system_conf/public-key.rsa
          - cop_static_content:/static
       restart: on-failure
-      
+
    apachedscop:
       image: tgbyte/apacheds:latest
       container_name: apachedscop
@@ -324,7 +382,7 @@ services:
       depends_on:
          - pgsqlapi
          - pgsqltotp
- 
+
    seed_pgsql:
       image: cloudcix/seed:latest
       container_name: seed_pgsql
@@ -344,10 +402,13 @@ services:
       restart: on-failure
       depends_on:
          - appmanager
+         - asset
+         - financial
          - iaas
          - membership
          - membershipldap
          - otp
+         - pat
          - pgsqlapi
 
    pit:
@@ -387,12 +448,16 @@ services:
          - /etc/nginx/certs:/etc/nginx/certs
          - cop_static_content:/app_framework/static
       depends_on:
+         - appmanager
+         - asset
+         - cop
+         - financial
+         - iaas
          - membership
          - otp
-         - iaas
-         - appmanager
+         - pat
+         - scheduler
          - support
-         - cop
 
    # region containers
    robot:
