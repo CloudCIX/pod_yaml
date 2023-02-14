@@ -57,6 +57,68 @@ services:
       volumes:
          - /var/lib/pgsqltotp:/var/lib/postgresql/data/
 
+   asset:
+      image: cloudcix/asset:latest
+      container_name: asset
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
+         - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:9"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
+   financial:
+      image: cloudcix/financial:latest
+      container_name: financial
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
+         - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:6"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
    membership:
       image: cloudcix/membership:latest
       container_name: membership
@@ -305,6 +367,8 @@ services:
       restart: on-failure
       depends_on:
          - appmanager
+         - asset
+         - financial
          - iaas
          - membership
          - membershipldap
@@ -349,6 +413,8 @@ services:
          - /etc/nginx/certs:/etc/nginx/certs
          - cop_static_content:/app_framework/static
       depends_on:
+         - asset
+         - financial
          - membership
          - otp
          - iaas
