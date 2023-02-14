@@ -305,6 +305,35 @@ services:
       depends_on:
          - pgsqlapi
 
+   training:
+      image: cloudcix/training:latest
+      container_name: training
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
    pat:
       image: cloudcix/pat:latest
       container_name: pat
@@ -456,8 +485,8 @@ services:
          - membership
          - otp
          - pat
-         - scheduler
          - support
+         - training
 
    # region containers
    robot:
