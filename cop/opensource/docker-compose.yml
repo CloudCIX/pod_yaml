@@ -131,8 +131,6 @@ services:
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
          - SENTRY_URL=${SENTRY_URL}
-      networks:
-         mgmt:
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -177,7 +175,7 @@ services:
          mgmt:
       restart: on-failure
    
-    legacyapi:
+   legacyapi:
       image: cloudcix/legacyapi:latest
       container_name: legacyapi
       environment:
