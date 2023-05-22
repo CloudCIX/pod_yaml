@@ -198,8 +198,8 @@ services:
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
       networks:
-        mgmt:
-         ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
          - leagacyapi_media_content:/media
