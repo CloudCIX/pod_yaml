@@ -14,9 +14,9 @@ networks:
          parent: ${OOB_INTERFACE}
       ipam:
          config:
-            - subnet: "10.${pod_id}.0.0/16"
-              ip_range: "10.${pod_id}.0.0/24"
-              gateway: "10.${pod_id}.0.1"
+            - subnet: "10.${POD_NUMBER}.0.0/16"
+              ip_range: "10.${POD_NUMBER}.0.0/24"
+              gateway: "10.${POD_NUMBER}.0.1"
 
 services:
    # cop containers
@@ -51,7 +51,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -80,7 +80,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -102,6 +102,7 @@ services:
          - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
          - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
          - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_ID=${POD_NUMBER}
          - POD_NAME=${POD_NAME}
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
@@ -110,7 +111,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/app_framework/system_conf/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/app_framework/system_conf/public-key.rsa
          - cop_static_content:/static
       restart: on-failure
 
@@ -138,7 +139,7 @@ services:
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -167,7 +168,7 @@ services:
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -204,7 +205,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
          - leagacyapi_media_content:/media
          - leagacyapi_private_media_content:/private_media
          - leagacyapi_static_content:/static
@@ -238,8 +239,8 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}:/application_framework/private-key.rsa
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/application_framework/private-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -330,7 +331,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqltotp
@@ -359,7 +360,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -440,7 +441,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -494,7 +495,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -523,7 +524,7 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
       depends_on:
          - pgsqlapi
@@ -554,8 +555,8 @@ services:
          - RELEASE=stable
       command: ['user_expiration_reminders']
       volumes:
-         - /home/administrator/.ssh/id_rsa_${pod_id}:/application_framework/private-key.rsa
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/application_framework/private-key.rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
 
    # region containers
    flower:
@@ -604,8 +605,8 @@ services:
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /home/administrator/celerybeat:/opt/robot/celerybeat
-         - /home/administrator/.ssh/id_rsa_${pod_id}:/root/.ssh/id_rsa
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/root/.ssh/id_rsa.pub
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
 
    robotworker:
@@ -634,8 +635,8 @@ services:
          - SEND_TO_FAIL=${SEND_TO_FAIL}
       volumes:
          - /etc/cloudcix/robot:/mnt/images
-         - /home/administrator/.ssh/id_rsa_${pod_id}:/root/.ssh/id_rsa
-         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/root/.ssh/id_rsa.pub
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
