@@ -47,7 +47,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
@@ -77,7 +76,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
@@ -108,7 +106,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
@@ -140,7 +137,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -170,7 +166,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -239,7 +234,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
@@ -305,6 +299,7 @@ services:
          - legacyapi
          - membership
          - otp
+         - pat
          - scheduler
          - support
          - training
@@ -331,7 +326,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
@@ -340,7 +334,36 @@ services:
       restart: on-failure
       depends_on:
          - pgsqltotp
-         
+
+   pat:
+      image: cloudcix/pat:latest
+      container_name: pat
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${pod_id}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
    pgadmincop:
       image: dpage/pgadmin4
       container_name: pgadmincop
@@ -413,7 +436,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
@@ -497,7 +519,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
@@ -531,7 +552,6 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL}
       command: ['user_expiration_reminders']
       volumes:
          - /home/administrator/.ssh/id_rsa_${pod_id}:/application_framework/private-key.rsa
