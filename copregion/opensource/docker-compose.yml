@@ -387,6 +387,7 @@ services:
          - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
       volumes:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
+         - ./backup/pgsqlapi:/data/backup
       
    pgsqltotp:
       image: cloudcix/pgsqltotp:latest
@@ -397,6 +398,7 @@ services:
          - POSTGRES_PASSWORD=${PGSQLTOTP_PASSWORD}
       volumes:
          - /var/lib/pgsqltotp:/var/lib/postgresql/data/
+         - ./backup/pgsqltotp:/data/backup
 
    pit:
       image: cloudcix/pit:latest
