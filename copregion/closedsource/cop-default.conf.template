@@ -315,6 +315,10 @@ server {
     ssl_certificate_key /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
 }
 
+upstream pat {
+    server pat:443;
+}
+
 server {
     listen       443 ssl;
     listen  [::]:443 ssl;
