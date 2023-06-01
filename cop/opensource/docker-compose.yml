@@ -423,6 +423,7 @@ services:
          - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
          - POD_NAME=${POD_NAME}
          - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
       restart: on-failure
       depends_on:
          - appmanager
