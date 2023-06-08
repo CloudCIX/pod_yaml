@@ -23,7 +23,7 @@ services:
    jaeger:
       image: jaegertracing/jaeger-agent:latest
       container_name: jaeger-agent
-      command: ["--reporter.grpc.host-port=collector.${REGION_PAM_NAME}.${REGION_PAM_ORGANIZATION_URL}:14250"]
+      command: ["--reporter.grpc.host-port=collector.${PAM_NAME}.${PAM_ORGANIZATION_URL}:14250"]
       networks:
          mgmt:
       restart: on-failure
