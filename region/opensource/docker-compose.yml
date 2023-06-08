@@ -10,6 +10,31 @@ networks:
               gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
+   flower:
+      image: mher/flower:0.9.5
+      container_name: flowerregion
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
+      ports:
+         - "${PMS6}:5555:5555"
+      entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
+
+   jaeger:
+      image: jaegertracing/jaeger-agent:latest
+      container_name: jaeger-agent
+      command: ["--reporter.grpc.host-port=collector.${REGION_PAM_NAME}.${REGION_PAM_ORGANIZATION_URL}:14250"]
+      networks:
+         mgmt:
+      restart: on-failure
+
+   rabbitmq:
+      image: rabbitmq
+      container_name: rabbitmqregion
+      hostname: rabbitmq
+      networks:
+        mgmt:
+
    robot:
       image: cloudcix/robot:latest
       container_name: robot
@@ -75,20 +100,3 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
-
-   rabbitmq:
-      image: rabbitmq
-      container_name: rabbitmqregion
-      hostname: rabbitmq
-      networks:
-        mgmt:
-      
-   flower:
-      image: mher/flower:0.9.5
-      container_name: flowerregion
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
-      ports:
-         - "${PMS6}:5555:5555"
-      entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
