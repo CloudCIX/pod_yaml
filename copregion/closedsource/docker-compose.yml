@@ -390,7 +390,6 @@ services:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
          - ./backup/pgsqlapi:/data/backup
 
-      
    pgsqltotp:
       image: cloudcix/pgsqltotp:latest
       container_name: pgsqltotp
