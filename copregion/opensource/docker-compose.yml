@@ -385,6 +385,7 @@ services:
          mgmt:
       environment:
          - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
+         - POSTGRES_USER=${PGSQLAPI_USER}
       volumes:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
          - ./backup/pgsqlapi:/data/backup
@@ -396,6 +397,7 @@ services:
          mgmt:
       environment:
          - POSTGRES_PASSWORD=${PGSQLTOTP_PASSWORD}
+         - POSTGRES_USER=${PGSQLTOTP_USER}
       volumes:
          - /var/lib/pgsqltotp:/var/lib/postgresql/data/
          - ./backup/pgsqltotp:/data/backup
@@ -572,6 +574,18 @@ services:
          - "${PMS6}:5555:5555"
       entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
+   pgsqlregion:
+      image: cloudcix/pgsqlregion:latest
+      container_name: pgsqlregion
+      networks:
+         mgmt:
+      environment:
+         - POSTGRES_PASSWORD=${PGSQLREGION_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLREGION_USER}
+      volumes:
+         - /var/lib/pgsqlregion:/var/lib/postgresql/data/
+         - ./backup/pgsqlregion:/data/backup
+
    rabbitmq:
       image: rabbitmq
       container_name: rabbitmqregion
@@ -596,6 +610,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
+         - PGSQLREGION_PASSWORD=${PGSQLREGION_PASSWORD}
+         - PGSQLREGION_USER=${PGSQLREGION_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -611,6 +627,8 @@ services:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
+      depends_on:
+         - pgsqlregion
 
    robotworker:
       image: cloudcix/robot:latest
@@ -626,6 +644,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
+         - PGSQLREGION_PASSWORD=${PGSQLREGION_PASSWORD}
+         - PGSQLREGION_USER=${PGSQLREGION_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -644,6 +664,8 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
+      depends_on:
+         - pgsqlregion
 
 volumes:
    # cop volumes

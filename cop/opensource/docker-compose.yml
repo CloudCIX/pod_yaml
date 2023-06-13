@@ -344,6 +344,7 @@ services:
          mgmt:
       environment:
          - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
+         - POSTGRES_USER=${PGSQLAPI_USER}
       volumes:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
          - ./backup/pgsqlapi:/data/backup
@@ -355,6 +356,7 @@ services:
          mgmt:
       environment:
          - POSTGRES_PASSWORD=${PGSQLTOTP_PASSWORD}
+         - POSTGRES_USER=${PGSQLTOTP_USER}
       volumes:
          - /var/lib/pgsqltotp:/var/lib/postgresql/data/
          - ./backup/pgsqltotp:/data/backup
