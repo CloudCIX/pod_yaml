@@ -580,8 +580,8 @@ services:
       networks:
          mgmt:
       environment:
-         - POSTGRES_PASSWORD=${PGSQLLOCKS_PASSWORD}
-         - POSTGRES_USER=${PGSQLLOCKS_USER}
+         - POSTGRES_PASSWORD=${CLOUDCIX_LOCK_CREDENTIALS}
+         - POSTGRES_USER=${CLOUDCIX_LOCK_USER}
       volumes:
          - /var/lib/pgsqllocks:/var/lib/postgresql/data/
          - ./backup/pgsqllocks:/data/backup
@@ -593,13 +593,15 @@ services:
       networks:
         mgmt:
 
-   robot:
+      robot:
       image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robot
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
       environment:
+         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
          - COP_NAME=${COP_NAME}
          - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
          - COP_PORTAL=${COP_PORTAL}
@@ -610,8 +612,6 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PGSQLLOCKS_PASSWORD=${PGSQLLOCKS_PASSWORD}
-         - PGSQLLOCKS_USER=${PGSQLLOCKS_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -634,6 +634,8 @@ services:
       image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robotworker
       environment:
+         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
          - COP_NAME=${COP_NAME}
          - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
          - COP_PORTAL=${COP_PORTAL}
@@ -644,8 +646,6 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PGSQLLOCKS_PASSWORD=${PGSQLLOCKS_PASSWORD}
-         - PGSQLLOCKS_USER=${PGSQLLOCKS_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
