@@ -628,7 +628,7 @@ services:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
       depends_on:
-         - pgsqllocks
+         - petersonsalgorithm
 
    robotworker:
       image: cloudcix/robot:${CLOUDCIX_VERSION}
