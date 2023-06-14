@@ -28,17 +28,17 @@ services:
          mgmt:
       restart: on-failure
 
-   petersonsalgorithm:
-      image: cloudcix/petersonsalgorithm:latest
-      container_name: petersonsalgorithm
+   pgsqllocks:
+      image: cloudcix/pgsqllocks:latest
+      container_name: pgsqllocks
       networks:
          mgmt:
       environment:
-         - POSTGRES_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
-         - POSTGRES_USER=${PETERSONSALGORITHM_USER}
+         - POSTGRES_PASSWORD=${PGSQLLOCKS_PASSWORD}
+         - POSTGRES_USER=${PGSQLLOCKS_USER}
       volumes:
-         - /var/lib/petersonsalgorithm:/var/lib/postgresql/data/
-         - ./backup/petersonsalgorithm:/data/backup
+         - /var/lib/pgsqllocks:/var/lib/postgresql/data/
+         - ./backup/pgsqllocks:/data/backup
 
    rabbitmq:
       image: rabbitmq
@@ -64,8 +64,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PETERSONSALGORITHM_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
-         - PETERSONSALGORITHM_USER=${PETERSONSALGORITHM_USER}
+         - PGSQLLOCKS_PASSWORD=${PGSQLLOCKS_PASSWORD}
+         - PGSQLLOCKS_USER=${PGSQLLOCKS_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -82,7 +82,7 @@ services:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
       depends_on:
-         - petersonsalgorithm
+         - pgsqllocks
 
    robotworker:
       image: cloudcix/robot:latest
@@ -98,8 +98,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PETERSONSALGORITHM_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
-         - PETERSONSALGORITHM_USER=${PETERSONSALGORITHM_USER}
+         - PGSQLLOCKS_PASSWORD=${PGSQLLOCKS_PASSWORD}
+         - PGSQLLOCKS_USER=${PGSQLLOCKS_USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -119,4 +119,4 @@ services:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
       depends_on:
-         - petersonsalgorithm
+         - pgsqllocks
