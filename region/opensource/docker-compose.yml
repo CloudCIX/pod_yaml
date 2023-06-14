@@ -29,7 +29,7 @@ services:
       restart: on-failure
 
    pgsqllocks:
-      image: cloudcix/pgsqllocks:latest
+      image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
       container_name: pgsqllocks
       networks:
          mgmt:

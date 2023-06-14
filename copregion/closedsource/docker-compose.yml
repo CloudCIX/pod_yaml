@@ -575,7 +575,7 @@ services:
       entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
    pgsqllocks:
-      image: cloudcix/pgsqllocks:latest
+      image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
       container_name: pgsqllocks
       networks:
          mgmt:
