@@ -574,17 +574,17 @@ services:
          - "${PMS6}:5555:5555"
       entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
-   pgsqlregion:
-      image: cloudcix/pgsqlregion:latest
-      container_name: pgsqlregion
+   petersonsalgorithm:
+      image: cloudcix/petersonsalgorithm:latest
+      container_name: petersonsalgorithm
       networks:
          mgmt:
       environment:
-         - POSTGRES_PASSWORD=${PGSQLREGION_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLREGION_USER}
+         - POSTGRES_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
+         - POSTGRES_USER=${PETERSONSALGORITHM__USER}
       volumes:
-         - /var/lib/pgsqlregion:/var/lib/postgresql/data/
-         - ./backup/pgsqlregion:/data/backup
+         - /var/lib/petersonsalgorithm:/var/lib/postgresql/data/
+         - ./backup/petersonsalgorithm:/data/backup
 
    rabbitmq:
       image: rabbitmq
@@ -610,8 +610,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PGSQLREGION_PASSWORD=${PGSQLREGION_PASSWORD}
-         - PGSQLREGION_USER=${PGSQLREGION_USER}
+         - PETERSONSALGORITHM_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
+         - PETERSONSALGORITHM__USER=${PETERSONSALGORITHM__USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -628,7 +628,7 @@ services:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
       depends_on:
-         - pgsqlregion
+         - petersonsalgorithm
 
    robotworker:
       image: cloudcix/robot:latest
@@ -644,8 +644,8 @@ services:
          - NETWORK_PASSWORD=${NETWORK_PASSWORD}
          - PAM_NAME=${REGION_PAM_NAME}
          - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - PGSQLREGION_PASSWORD=${PGSQLREGION_PASSWORD}
-         - PGSQLREGION_USER=${PGSQLREGION_USER}
+         - PETERSONSALGORITHM_PASSWORD=${PETERSONSALGORITHM_PASSWORD}
+         - PETERSONSALGORITHM__USER=${PETERSONSALGORITHM__USER}
          - POD_NAME=${POD_NAME}
          - PODNET_CPE=${PODNET_CPE}
          - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
@@ -665,7 +665,7 @@ services:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
       depends_on:
-         - pgsqlregion
+         - petersonsalgorithm
 
 volumes:
    # cop volumes
