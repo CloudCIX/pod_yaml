@@ -28,7 +28,7 @@ services:
             ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
 
    appmanager:
-      image: cloudcix/appmanager:latest
+      image: cloudcix/appmanager:${CLOUDCIX_VERSION}
       container_name: appmanager
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -57,7 +57,7 @@ services:
          - pgsqlapi
 
    circuit:
-      image: cloudcix/circuit:latest
+      image: cloudcix/circuit:${CLOUDCIX_VERSION}
       container_name: circuit
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -86,7 +86,7 @@ services:
          - pgsqlapi
 
    cop:
-      image: cloudcix/cop:latest
+      image: cloudcix/cop:${CLOUDCIX_VERSION}
       container_name: cop
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -116,7 +116,7 @@ services:
       restart: on-failure
 
    financial:
-      image: cloudcix/financial:latest
+      image: cloudcix/financial:${CLOUDCIX_VERSION}
       container_name: financial
       networks:
          mgmt:
@@ -145,7 +145,7 @@ services:
          - pgsqlapi
       
    iaas:
-      image: cloudcix/iaas:latest
+      image: cloudcix/iaas:${CLOUDCIX_VERSION}
       container_name: iaas
       networks:
          mgmt:
@@ -182,7 +182,7 @@ services:
       restart: on-failure
    
    legacyapi:
-      image: cloudcix/legacyapi:latest
+      image: cloudcix/legacyapi:${CLOUDCIX_VERSION}
       container_name: legacyapi
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -214,7 +214,7 @@ services:
          - pgsqlapi
 
    membership:
-      image: cloudcix/membership:latest
+      image: cloudcix/membership:${CLOUDCIX_VERSION}
       container_name: membership
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -306,7 +306,7 @@ services:
          - training
 
    otp:
-      image: cloudcix/otp:latest
+      image: cloudcix/otp:${CLOUDCIX_VERSION}
       container_name: otp
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -337,7 +337,7 @@ services:
          - pgsqltotp
 
    pat:
-      image: cloudcix/pat:latest
+      image: cloudcix/pat:${CLOUDCIX_VERSION}
       container_name: pat
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -379,7 +379,7 @@ services:
          - pgsqltotp
  
    pgsqlapi:
-      image: cloudcix/pgsqlapi:latest
+      image: cloudcix/pgsqlapi:${CLOUDCIX_VERSION}
       container_name: pgsqlapi
       networks:
          mgmt:
@@ -391,7 +391,7 @@ services:
          - ./backup/pgsqlapi:/data/backup
       
    pgsqltotp:
-      image: cloudcix/pgsqltotp:latest
+      image: cloudcix/pgsqltotp:${CLOUDCIX_VERSION}
       container_name: pgsqltotp
       networks:
          mgmt:
@@ -422,7 +422,7 @@ services:
          - nginxcop
 
    scheduler:
-      image: cloudcix/scheduler:latest
+      image: cloudcix/scheduler:${CLOUDCIX_VERSION}
       container_name: scheduler
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -451,7 +451,7 @@ services:
          - pgsqlapi
 
    seed_pgsql:
-      image: cloudcix/seed:latest
+      image: cloudcix/seed:${CLOUDCIX_VERSION}
       container_name: seed_pgsql
       networks:
          mgmt:
@@ -477,7 +477,7 @@ services:
          - pgsqlapi
 
    support:
-      image: cloudcix/support:latest
+      image: cloudcix/support:${CLOUDCIX_VERSION}
       container_name: support
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -506,7 +506,7 @@ services:
          - pgsqlapi
 
    training:
-      image: cloudcix/training:latest
+      image: cloudcix/training:${CLOUDCIX_VERSION}
       container_name: training
       environment:
          - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
@@ -535,7 +535,7 @@ services:
          - pgsqlapi
 
    user_expiration_cron:
-      image: cloudcix/membershipcron:latest
+      image: cloudcix/membershipcron:${CLOUDCIX_VERSION}
       container_name: user_expiration_cron
       networks:
          mgmt:
@@ -594,7 +594,7 @@ services:
         mgmt:
 
    robot:
-      image: cloudcix/robot:latest
+      image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robot
       networks:
          mgmt:
@@ -631,7 +631,7 @@ services:
          - pgsqllocks
 
    robotworker:
-      image: cloudcix/robot:latest
+      image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robotworker
       environment:
          - COP_NAME=${COP_NAME}

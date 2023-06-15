@@ -48,7 +48,7 @@ services:
         mgmt:
 
    robot:
-      image: cloudcix/robot:latest
+      image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robot
       networks:
          mgmt:
@@ -85,7 +85,7 @@ services:
          - pgsqllocks
 
    robotworker:
-      image: cloudcix/robot:latest
+      image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robotworker
       environment:
          - COP_NAME=${COP_NAME}
