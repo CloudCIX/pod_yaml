@@ -28,6 +28,18 @@ services:
          mgmt:
       restart: on-failure
 
+   pgsqllocks:
+      image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
+      container_name: pgsqllocks
+      networks:
+         mgmt:
+      environment:
+         - POSTGRES_PASSWORD=${CLOUDCIX_LOCK_CREDENTIALS}
+         - POSTGRES_USER=${CLOUDCIX_LOCK_USER}
+      volumes:
+         - /var/lib/pgsqllocks:/var/lib/postgresql/data/
+         - ./backup/pgsqllocks:/data/backup
+
    rabbitmq:
       image: rabbitmq
       container_name: rabbitmqregion
@@ -42,6 +54,8 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
       environment:
+         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
          - COP_NAME=${COP_NAME}
          - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
          - COP_PORTAL=${COP_PORTAL}
@@ -67,11 +81,15 @@ services:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
       entrypoint: supervisord
+      depends_on:
+         - pgsqllocks
 
    robotworker:
       image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robotworker
       environment:
+         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
          - COP_NAME=${COP_NAME}
          - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
          - COP_PORTAL=${COP_PORTAL}
@@ -100,3 +118,5 @@ services:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
       entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
+      depends_on:
+         - pgsqllocks
