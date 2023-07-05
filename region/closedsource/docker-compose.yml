@@ -47,7 +47,7 @@ services:
       networks:
         mgmt:
 
-      robot:
+   robot:
       image: cloudcix/robot:${CLOUDCIX_VERSION}
       container_name: robot
       networks:
