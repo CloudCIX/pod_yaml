@@ -47,6 +47,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_APPMANAGER}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
@@ -76,9 +77,40 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_CIRCUIT}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
+      volumes:
+         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
+      restart: on-failure
+      depends_on:
+         - pgsqlapi
+
+   contact:
+      image: cloudcix/contact:${CLOUDCIX_VERSION}
+      container_name: contact
+      environment:
+         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+         - EMAIL_HOST=${COP_EMAIL_HOST}
+         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
+         - EMAIL_PORT=${COP_EMAIL_PORT}
+         - EMAIL_USER=${COP_EMAIL_USER}
+         - ORGANIZATION_URL=${ORGANIZATION_URL}
+         - PAM_NAME=${PAM_NAME}
+         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
+         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+         - PGSQLAPI_USER=${PGSQLAPI_USER}
+         - POD_NAME=${POD_NAME}
+         - POD_SECRET_KEY=${POD_SECRET_KEY}
+         - PORTAL_NAME=${PORTAL_NAME}
+         - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_CONTACT}
+      networks:
+         mgmt:
+            ipv6_address: "${DOCKER_MGMT_IP6}4004:15"
       volumes:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -138,6 +170,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_FINANCIAL}
       volumes:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -167,6 +200,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_IAAS}
       volumes:
          - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
       restart: on-failure
@@ -235,6 +269,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_MEMBERSHIP}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
@@ -295,6 +330,7 @@ services:
       depends_on:
          - appmanager
          - circuit
+         - contact
          - financial
          - iaas
          - legacyapi
@@ -327,6 +363,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_OTP}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
@@ -356,6 +393,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_PAT}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
@@ -389,7 +427,7 @@ services:
       volumes:
          - /var/lib/pgsqlapi:/var/lib/postgresql/data/
          - ./backup/pgsqlapi:/data/backup
-      
+
    pgsqltotp:
       image: cloudcix/pgsqltotp:${CLOUDCIX_VERSION}
       container_name: pgsqltotp
@@ -441,6 +479,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_SCHEDULER}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
@@ -496,6 +535,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_SUPPORT}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
@@ -525,6 +565,7 @@ services:
          - POD_SECRET_KEY=${POD_SECRET_KEY}
          - PORTAL_NAME=${PORTAL_NAME}
          - RELEASE=stable
+         - SENTRY_URL=${SENTRY_URL_TRAINING}
       networks:
          mgmt:
             ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
