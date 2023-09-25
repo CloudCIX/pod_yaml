@@ -276,6 +276,7 @@ services:
       networks:
          mgmt:
       environment:
+         - KEEP_EXISTING_CONFIG=true
          - LDAP_ADMIN_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
          - LDAP_DOMAIN=${ORGANIZATION_URL}
          - LDAP_ORGANISATION=${ORGANIZATION_URL}
