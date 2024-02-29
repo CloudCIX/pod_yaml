@@ -6,7 +6,7 @@ networks:
       enable_ipv6: true
       ipam:
          config:
-            - subnet: "${DOCKER_MGMT_IP6}1/64"
+            - subnet: "${DOCKER_MGMT_IP6}/64"
               gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
