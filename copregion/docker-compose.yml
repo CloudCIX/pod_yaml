@@ -653,8 +653,8 @@ services:
       networks:
          mgmt:
       environment:
-         - POSTGRES_PASSWORD=${PGSQLLOCKS_PASSWORD}
-         - POSTGRES_USER=${PGSQLLOCKS_USER}
+         - POSTGRES_PASSWORD=${CLOUDCIX_LOCK_CREDENTIALS}
+         - POSTGRES_USER=${CLOUDCIX_LOCK_USER}
       volumes:
          - /var/lib/pgsqllocks:/var/lib/postgresql/data/
          - ./backup/pgsqllocks:/data/backup
