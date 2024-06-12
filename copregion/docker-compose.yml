@@ -1,750 +1,939 @@
 version: '3'
 
 networks:
-   mgmt:
-      driver: bridge
-      enable_ipv6: true
-      ipam:
-         config:
-            - subnet: "${DOCKER_MGMT_IP6}/64"
-              gateway: "${DOCKER_MGMT_IP6}1"
-   oob:
-      driver: macvlan
-      driver_opts:
-         parent: ${OOB_INTERFACE}
-      ipam:
-         config:
-            - subnet: "10.${POD_NUMBER}.0.0/16"
-              ip_range: "10.${POD_NUMBER}.0.0/24"
-              gateway: "10.${POD_NUMBER}.0.1"
+  mgmt:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "${DOCKER_MGMT_IP6}/64"
+          gateway: "${DOCKER_MGMT_IP6}1"
 
 services:
-   # cop containers
-   apachedscop:
-      image: tgbyte/apacheds:latest
-      container_name: apachedscop
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
+  # common
+  jaeger:
+    image: jaegertracing/jaeger-agent:latest
+    container_name: jaeger-agent
+    command: ["--reporter.grpc.host-port=${JAEGER_URL}:14250"]
+    networks:
+      mgmt:
+    restart: on-failure
 
-   appmanager:
-      image: cloudcix/appmanager:${CLOUDCIX_VERSION}
-      container_name: appmanager
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_APPMANAGER}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5002:1"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    volumes:
+      - /data/pgadmin/backup:/data/backup
+ 
+  # cop
+  apachedscop:
+    image: tgbyte/apacheds:latest
+    container_name: apachedscop
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
 
-   circuit:
-      image: cloudcix/circuit:${CLOUDCIX_VERSION}
-      container_name: circuit
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_CIRCUIT}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  appmanager:
+    image: cloudcix/appmanager:${CLOUDCIX_VERSION}
+    container_name: appmanager
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_APPMANAGER}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   contact:
-      image: cloudcix/contact:${CLOUDCIX_VERSION}
-      container_name: contact
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_CONTACT}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:15"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  circuit:
+    image: cloudcix/circuit:${CLOUDCIX_VERSION}
+    container_name: circuit
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_CIRCUIT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   cop:
-      image: cloudcix/cop:${CLOUDCIX_VERSION}
-      container_name: cop
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_ID_MEMBER=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_ID=${POD_NUMBER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/app_framework/system_conf/public-key.rsa
-         - cop_static_content:/static
-      restart: on-failure
+  contact:
+    image: cloudcix/contact:${CLOUDCIX_VERSION}
+    container_name: contact
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_CONTACT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:15"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   financial:
-      image: cloudcix/financial:${CLOUDCIX_VERSION}
-      container_name: financial
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:6"
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_FINANCIAL}
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  cop:
+    image: cloudcix/cop:${CLOUDCIX_VERSION}
+    container_name: cop
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_ID_MEMBER=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/app_framework/system_conf/public-key.rsa
+      - cop_static_content:/static
+    restart: on-failure
 
-   iaas:
-      image: cloudcix/iaas:${CLOUDCIX_VERSION}
-      container_name: iaas
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:3"
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_IAAS}
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  financial:
+    image: cloudcix/financial:${CLOUDCIX_VERSION}
+    container_name: financial
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:6"
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_FINANCIAL}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
+    
+  flowerroutine:
+    image: mher/flower:0.9.5
+    container_name: flowerroutine
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5002:3"
+    entrypoint: flower --port=5555 --broker=amqp://rabbitmqroutine:5672/
 
-   jaeger:
-      image: jaegertracing/jaeger-agent:latest
-      container_name: jaeger-agent
-      command: ["--reporter.grpc.host-port=collector.${PAM_NAME}.${PAM_ORGANIZATION_URL}:14250"]
-      networks:
-         mgmt:
-      restart: on-failure
+  iaas:
+    image: cloudcix/iaas:${CLOUDCIX_VERSION}
+    container_name: iaas
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:3"
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_IAAS}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
+  
+  legacyapi:
+    image: cloudcix/legacyapi:${CLOUDCIX_VERSION}
+    container_name: legacyapi
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - RELEASE=stable
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+      - leagacyapi_media_content:/media
+      - leagacyapi_private_media_content:/private_media
+      - leagacyapi_static_content:/static
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   legacyapi:
-      image: cloudcix/legacyapi:${CLOUDCIX_VERSION}
-      container_name: legacyapi
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-         - leagacyapi_media_content:/media
-         - leagacyapi_private_media_content:/private_media
-         - leagacyapi_static_content:/static
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  membership:
+    image: cloudcix/membership:${CLOUDCIX_VERSION}
+    container_name: membership
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
+      - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_MEMBERSHIP}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
+    volumes:
+      - /home/administrator/.ssh/id_rsa:/application_framework/private-key.rsa
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
+      - membershipldap
 
-   membership:
-      image: cloudcix/membership:${CLOUDCIX_VERSION}
-      container_name: membership
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
-         - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_MEMBERSHIP}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/application_framework/private-key.rsa
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
-         - membershipldap
+  membershipldap:
+    image: osixia/openldap
+    container_name: membershipldap
+    networks:
+      mgmt:
+    environment:
+      - LDAP_ADMIN_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+      - LDAP_DOMAIN=${ORGANIZATION_URL}
+      - LDAP_ORGANISATION=${ORGANIZATION_URL}
+      - LDAP_TLS=false
+    volumes:
+      - /data/slapd/membershipldap/database:/var/lib/ldap
+      - /data/slapd/membershipldap/config:/etc/ldap/slapd.d
 
-   membershipldap:
-      image: osixia/openldap
-      container_name: membershipldap
-      networks:
-         mgmt:
-      environment:
-         - KEEP_EXISTING_CONFIG=true
-         - LDAP_ADMIN_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
-         - LDAP_DOMAIN=${ORGANIZATION_URL}
-         - LDAP_ORGANISATION=${ORGANIZATION_URL}
-         - LDAP_TLS=false
-      volumes:
-         - /data/slapd/membershipldap/database:/var/lib/ldap
-         - /data/slapd/membershipldap/config:/etc/ldap/slapd.d
+  membershipldapbackup:
+    image: osixia/openldap-backup
+    container_name: membershipldapbackup
+    networks:
+      mgmt:
+    environment:
+      - LDAP_BACKUP_CONFIG_CRON_EXP="0 4 * * *"
+      - LDAP_BACKUP_DATA_CRON_EXP="0 4 * * *"
+    volumes_from:
+      - membershipldap
+    volumes:
+      - /data/openldap/membershipldap/backup:/data/backup
 
-   membershipldapbackup:
-      image: osixia/openldap-backup
-      container_name: membershipldapbackup
-      networks:
-         mgmt:
-      environment:
-         - LDAP_BACKUP_CONFIG_CRON_EXP="0 4 * * *"
-         - LDAP_BACKUP_DATA_CRON_EXP="0 4 * * *"
-      volumes_from:
-         - membershipldap
-      volumes:
-         - /data/openldap/membershipldap/backup:/data/backup
+  nginxcop:
+    image: nginx:1.19.2-alpine
+    container_name: nginxcop
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:a"
+    environment:
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+    ports:
+      - "${PMS4}:443:443"
+      - "${PMS5}:443:443"
+    volumes:
+      - ./templates/cop:/etc/nginx/templates
+      - /etc/nginx/certs:/etc/nginx/certs
+      - cop_static_content:/app_framework/static
+      - leagacyapi_media_content:/application_framework/media
+      - leagacyapi_static_content:/application_framework/static
+    depends_on:
+      - appmanager
+      - circuit
+      - contact
+      - financial
+      - iaas
+      - legacyapi
+      - membership
+      - otp
+      - pat
+      - plot
+      - scheduler
+      - support
+      - training
 
-   nginxcop:
-      image: nginx:1.19.2-alpine
-      container_name: nginxcop
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:a"
-      environment:
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - POD_NAME=${POD_NAME}
-         - PORTAL_NAME=${PORTAL_NAME}
-      ports:
-         - "${PMS4}:443:443"
-         - "${PMS5}:443:443"
-      volumes:
-         - ./templates/cop:/etc/nginx/templates
-         - /etc/nginx/certs:/etc/nginx/certs
-         - cop_static_content:/app_framework/static
-         - leagacyapi_media_content:/application_framework/media
-         - leagacyapi_static_content:/application_framework/static
-      depends_on:
-         - appmanager
-         - circuit
-         - contact
-         - financial
-         - iaas
-         - legacyapi
-         - membership
-         - otp
-         - pat
-         - plot
-         - scheduler
-         - support
-         - training
+  otp:
+    image: cloudcix/otp:${CLOUDCIX_VERSION}
+    container_name: otp
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - PGSQLTOTP_PASSWORD=${PGSQLTOTP_PASSWORD}
+      - PGSQLTOTP_USER=${PGSQLTOTP_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_OTP}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqltotp
 
-   otp:
-      image: cloudcix/otp:${CLOUDCIX_VERSION}
-      container_name: otp
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - PGSQLTOTP_PASSWORD=${PGSQLTOTP_PASSWORD}
-         - PGSQLTOTP_USER=${PGSQLTOTP_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_OTP}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqltotp
+  pat:
+    image: cloudcix/pat:${CLOUDCIX_VERSION}
+    container_name: pat
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_PLOT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi   
 
-   pat:
-      image: cloudcix/pat:${CLOUDCIX_VERSION}
-      container_name: pat
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_PAT}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  pgsqlapi:
+    image: cloudcix/pgsqlapi:${CLOUDCIX_VERSION}
+    container_name: pgsqlapi
+    networks:
+      mgmt:
+    environment:
+      - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
+      - POSTGRES_USER=${PGSQLAPI_USER}
+    volumes:
+      - /var/lib/pgsqlapi:/var/lib/postgresql/data/
+      - ./backup/pgsqlapi:/data/backup
+    
+  pgsqltotp:
+    image: cloudcix/pgsqltotp:${CLOUDCIX_VERSION}
+    container_name: pgsqltotp
+    networks:
+      mgmt:
+    environment:
+      - POSTGRES_PASSWORD=${PGSQLTOTP_PASSWORD}
+      - POSTGRES_USER=${PGSQLTOTP_USER}
+    volumes:
+      - /var/lib/pgsqltotp:/var/lib/postgresql/data/
+      - ./backup/pgsqltotp:/data/backup
 
-   pgadmincop:
-      image: dpage/pgadmin4
-      container_name: pgadmincop
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}5002:1"
-      environment:
-         - PGADMIN_DEFAULT_EMAIL=${PGADMINCOP_EMAIL}
-         - PGADMIN_DEFAULT_PASSWORD=${PGADMINCOP_PASSWORD}
-      depends_on:
-         - pgsqlapi
-         - pgsqltotp
+  pit:
+    image: cloudcix/pit:latest
+    container_name: pit
+    environment:
+      - ICARUS_EMAIL=${CLOUDCIX_API_USERNAME}
+      - ICARUS_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - ICARUS_API_KEY=${CLOUDCIX_API_KEY}
+      - ICARUS_API_URL=${POD_NAME}.${ORGANIZATION_URL}
+    network_mode: "host"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50003"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - membership
+      - iaas
+      - nginxcop
 
-   pgsqlapi:
-      image: cloudcix/pgsqlapi:${CLOUDCIX_VERSION}
-      container_name: pgsqlapi
-      networks:
-         mgmt:
-      environment:
-         - POSTGRES_PASSWORD=${PGSQLAPI_PASSWORD}
-         - POSTGRES_USER=${PGSQLAPI_USER}
-      volumes:
-         - /var/lib/pgsqlapi:/var/lib/postgresql/data/
-         - ./backup/pgsqlapi:/data/backup
+  plot:
+    image: cloudcix/plot:${CLOUDCIX_VERSION}
+    container_name: plot
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_PLOT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:17"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   pgsqltotp:
-      image: cloudcix/pgsqltotp:${CLOUDCIX_VERSION}
-      container_name: pgsqltotp
-      networks:
-         mgmt:
-      environment:
-         - POSTGRES_PASSWORD=${PGSQLTOTP_PASSWORD}
-         - POSTGRES_USER=${PGSQLTOTP_USER}
-      volumes:
-         - /var/lib/pgsqltotp:/var/lib/postgresql/data/
-         - ./backup/pgsqltotp:/data/backup
+  rabbitmqroutine:
+    image: rabbitmq
+    container_name: rabbitmqroutine
+    hostname: rabbitmqroutine
+    networks:
+      mgmt:
 
-   pit:
-      image: cloudcix/pit:latest
-      container_name: pit
-      environment:
-         - ICARUS_EMAIL=${CLOUDCIX_API_USERNAME}
-         - ICARUS_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - ICARUS_API_KEY=${CLOUDCIX_API_KEY}
-         - ICARUS_API_URL=${POD_NAME}.${ORGANIZATION_URL}
-      network_mode: "host"
-      healthcheck:
-         test: ["CMD", "curl", "-f", "http://localhost:50003"]
-         interval: 10s
-         timeout: 5s
-         retries: 5
-      depends_on:
-         - membership
-         - iaas
-         - nginxcop
+  routine:
+    image: cloudcix/routine:${CLOUDCIX_VERSION}
+    container_name: routine
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5001:1"
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_REPLY_TO=${EMAIL_REPLY_TO}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+    entrypoint: supervisord
+    volumes:
+      - /var/lib/routine/celerybeat:/opt/routine/celerybeat
 
-   plot:
-      image: cloudcix/plot:${CLOUDCIX_VERSION}
-      container_name: plot
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_PLOT}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:17"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
-   
-   scheduler:
-      image: cloudcix/scheduler:${CLOUDCIX_VERSION}
-      container_name: scheduler
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_SCHEDULER}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  routineworker:
+    image: cloudcix/routine:${CLOUDCIX_VERSION}
+    container_name: routineworker
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_REPLY_TO=${EMAIL_REPLY_TO}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5001:2"
+    entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
 
-   seed_pgsql:
-      image: cloudcix/seed:${CLOUDCIX_VERSION}
-      container_name: seed_pgsql
-      networks:
-         mgmt:
-      environment:
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
-         - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-      restart: on-failure
-      depends_on:
-         - appmanager
-         - iaas
-         - membership
-         - membershipldap
-         - otp
-         - pgsqlapi
+  scheduler:
+    image: cloudcix/scheduler:${CLOUDCIX_VERSION}
+    container_name: scheduler
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_SCHEDULER}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   support:
-      image: cloudcix/support:${CLOUDCIX_VERSION}
-      container_name: support
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_SUPPORT}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  seed_pgsql:
+    image: cloudcix/seed:${CLOUDCIX_VERSION}
+    container_name: seed_pgsql
+    networks:
+      mgmt:
+    environment:
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
+      - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+    restart: on-failure
+    depends_on:
+      - appmanager
+      - circuit
+      - financial
+      - iaas
+      - legacyapi
+      - membership
+      - membershipldap
+      - otp
+      - pat
+      - pgsqlapi
+      - scheduler
+      - support
+      - training
 
-   training:
-      image: cloudcix/training:${CLOUDCIX_VERSION}
-      container_name: training
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-         - SENTRY_URL=${SENTRY_URL_TRAINING}
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
-      restart: on-failure
-      depends_on:
-         - pgsqlapi
+  source_readings_cron:
+    image: cloudcix/plotcron:${CLOUDCIX_VERSION}
+    container_name: source_readings_cron
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_PLOT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+    command: ['source_readings_delete']
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
 
-   user_expiration_cron:
-      image: cloudcix/membershipcron:${CLOUDCIX_VERSION}
-      container_name: user_expiration_cron
-      networks:
-         mgmt:
-      environment:
-         - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
-         - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
-         - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
-         - EMAIL_HOST=${COP_EMAIL_HOST}
-         - EMAIL_PASSWORD=${COP_EMAIL_PASSWORD}
-         - EMAIL_PORT=${COP_EMAIL_PORT}
-         - EMAIL_USER=${COP_EMAIL_USER}
-         - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
-         - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - PAM_NAME=${PAM_NAME}
-         - PAM_ORGANIZATION_URL=${PAM_ORGANIZATION_URL}
-         - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
-         - PGSQLAPI_USER=${PGSQLAPI_USER}
-         - POD_NAME=${POD_NAME}
-         - POD_SECRET_KEY=${POD_SECRET_KEY}
-         - PORTAL_NAME=${PORTAL_NAME}
-         - RELEASE=stable
-      command: ['user_expiration_reminders']
-      volumes:
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/application_framework/private-key.rsa
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/application_framework/public-key.rsa
+  support:
+    image: cloudcix/support:${CLOUDCIX_VERSION}
+    container_name: support
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_SUPPORT}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   # region containers
-   flower:
-      image: mher/flower:0.9.5
-      container_name: flowerregion
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
-      ports:
-         - "${PMS6}:5555:5555"
-      entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
+  training:
+    image: cloudcix/training:${CLOUDCIX_VERSION}
+    container_name: training
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      - SENTRY_URL=${SENTRY_URL_TRAINING}
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
+    volumes:
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
 
-   pgsqllocks:
-      image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
-      container_name: pgsqllocks
-      networks:
-         mgmt:
-      environment:
-         - POSTGRES_PASSWORD=${CLOUDCIX_LOCK_CREDENTIALS}
-         - POSTGRES_USER=${CLOUDCIX_LOCK_USER}
-      volumes:
-         - /var/lib/pgsqllocks:/var/lib/postgresql/data/
-         - ./backup/pgsqllocks:/data/backup
+  user_expiration_cron:
+    image: cloudcix/membershipcron:${CLOUDCIX_VERSION}
+    container_name: user_expiration_cron
+    networks:
+      mgmt:
+    environment:
+      - CLOUDCIX_API_KEY=${CLOUDCIX_API_KEY}
+      - CLOUDCIX_API_PASSWORD=${CLOUDCIX_API_PASSWORD}
+      - CLOUDCIX_API_USERNAME=${CLOUDCIX_API_USERNAME}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
+      - LOGSTASH_URL=${LOGSTASH_URL}
+      - MEMBERSHIPLDAP_DC=${MEMBERSHIPLDAP_DC}
+      - MEMBERSHIPLDAP_PASSWORD=${MEMBERSHIPLDAP_PASSWORD}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PGSQLAPI_PASSWORD=${PGSQLAPI_PASSWORD}
+      - PGSQLAPI_USER=${PGSQLAPI_USER}
+      - POD_NAME=${POD_NAME}
+      - POD_SECRET_KEY=${POD_SECRET_KEY}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
+      - RELEASE=stable
+      # To be deprecated
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+    command: ['user_expiration_reminders']
+    volumes:
+      - /home/administrator/.ssh/id_rsa:/application_framework/private-key.rsa
+      - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
 
-   rabbitmq:
-      image: rabbitmq
-      container_name: rabbitmqregion
-      hostname: rabbitmq
-      networks:
-        mgmt:
+  # region
+  flowerrobot:
+    image: mher/flower:0.9.5
+    container_name: flowerrobot
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
+    entrypoint: flower --port=5555 --broker=amqp://rabbitmqrobot:5672/
 
-   robot:
-      image: cloudcix/robot:${CLOUDCIX_VERSION}
-      container_name: robot
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
-      environment:
-         - CEPH_MONITORS=${CEPH_MONITORS}
-         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
-         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
-         - COP_NAME=${COP_NAME}
-         - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
-         - COP_PORTAL=${COP_PORTAL}
-         - EMAIL_HOST=${REGION_EMAIL_HOST}
-         - EMAIL_PASSWORD=${REGION_EMAIL_PASSWORD}
-         - EMAIL_PORT=${REGION_EMAIL_PORT}
-         - EMAIL_USER=${REGION_EMAIL_USER}
-         - NETWORK_PASSWORD=${NETWORK_PASSWORD}
-         - PAM_NAME=${REGION_PAM_NAME}
-         - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - POD_NAME=${POD_NAME}
-         - PODNET_CPE=${PODNET_CPE}
-         - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
-         - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - ROBOT_API_KEY=${ROBOT_API_KEY}
-         - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
-         - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
-         - SEND_TO_FAIL=${SEND_TO_FAIL}
-      volumes:
-         - /home/administrator/celerybeat:/opt/robot/celerybeat
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
-      entrypoint: supervisord
-      depends_on:
-         - pgsqllocks
+  pgsqllocks:
+    image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
+    container_name: pgsqllocks
+    networks:
+      mgmt:
+    environment:
+      - POSTGRES_PASSWORD=${CLOUDCIX_LOCK_CREDENTIALS}
+      - POSTGRES_USER=${CLOUDCIX_LOCK_USER}
+    volumes:
+      - /var/lib/pgsqllocks:/var/lib/postgresql/data/
+      - ./backup/pgsqllocks:/data/backup
 
-   robotworker:
-      image: cloudcix/robot:${CLOUDCIX_VERSION}
-      container_name: robotworker
-      environment:
-         - CEPH_MONITORS=${CEPH_MONITORS}
-         - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
-         - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
-         - COP_NAME=${COP_NAME}
-         - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
-         - COP_PORTAL=${COP_PORTAL}
-         - EMAIL_HOST=${REGION_EMAIL_HOST}
-         - EMAIL_PASSWORD=${REGION_EMAIL_PASSWORD}
-         - EMAIL_PORT=${REGION_EMAIL_PORT}
-         - EMAIL_USER=${REGION_EMAIL_USER}
-         - NETWORK_PASSWORD=${NETWORK_PASSWORD}
-         - PAM_NAME=${REGION_PAM_NAME}
-         - PAM_ORGANIZATION_URL=${REGION_PAM_ORGANIZATION_URL}
-         - POD_NAME=${POD_NAME}
-         - PODNET_CPE=${PODNET_CPE}
-         - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
-         - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
-         - ORGANIZATION_URL=${ORGANIZATION_URL}
-         - ROBOT_API_KEY=${ROBOT_API_KEY}
-         - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
-         - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-         - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
-         - SEND_TO_FAIL=${SEND_TO_FAIL}
-      volumes:
-         - /etc/cloudcix/robot:/mnt/images
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}:/root/.ssh/id_rsa
-         - /home/administrator/.ssh/id_rsa_${POD_NUMBER}.pub:/root/.ssh/id_rsa.pub
-      networks:
-         mgmt:
-            ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
-      entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
-      depends_on:
-         - pgsqllocks
+  rabbitmqrobot:
+    image: rabbitmq
+    container_name: rabbitmqrobot
+    hostname: rabbitmq
+    # hostname: rabbitmqrobot
+    networks:
+      mgmt:
+
+  robot:
+    image: cloudcix/robot:${CLOUDCIX_VERSION}
+    container_name: robot
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
+    environment:
+      - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+      - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
+      - COP_NAME=${COP_NAME}
+      - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - ROBOT_API_KEY=${ROBOT_API_KEY}
+      - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
+      - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
+      - SEND_TO_FAIL=${EMAIL_REPLY_TO}
+      # to be deprecated
+      - CEPH_MONITORS=${CEPH_MONITORS}
+      - COP_PORTAL=${PORTAL_NAME}
+      - NETWORK_PASSWORD=${NETWORK_PASSWORD}
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PODNET_CPE=${PODNET_CPE}
+      - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
+      - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
+      - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
+    volumes:
+      - /var/lib/robot/celerybeat:/opt/robot/celerybeat
+      - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
+      - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+    entrypoint: supervisord
+    depends_on:
+      - pgsqllocks
+
+  robotworker:
+    image: cloudcix/robot:${CLOUDCIX_VERSION}
+    container_name: robotworker
+    environment:
+      - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
+      - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
+      - COP_NAME=${COP_NAME}
+      - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - PAT_NAME=${PAT_NAME}
+      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - ROBOT_API_KEY=${ROBOT_API_KEY}
+      - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
+      - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
+      - SEND_TO_FAIL=${EMAIL_REPLY_TO}
+      # to be deprecated
+      - CEPH_MONITORS=${CEPH_MONITORS}
+      - COP_PORTAL=${PORTAL_NAME}
+      - NETWORK_PASSWORD=${NETWORK_PASSWORD}
+      - PAM_NAME=${PAT_NAME}
+      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - PODNET_CPE=${PODNET_CPE}
+      - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
+      - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
+      - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
+    volumes:
+      - /etc/cloudcix/robot:/mnt/images
+      - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
+      - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
+    entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
+    depends_on:
+      - pgsqllocks
+
 
 volumes:
-   # cop volumes
-   cop_static_content:
-   leagacyapi_media_content:
-   leagacyapi_private_media_content:
-   leagacyapi_static_content:
+  # cop volumes
+  cop_static_content:
+  leagacyapi_media_content:
+  leagacyapi_private_media_content:
+  leagacyapi_static_content:
