@@ -36,7 +36,7 @@ services:
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}6002:4"
-    entrypoint: flower --port=5555 --broker=amqp://rabbitmqrobot:5672/
+    entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
   pgsqllocks:
     image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
@@ -50,11 +50,10 @@ services:
       - /var/lib/pgsqllocks:/var/lib/postgresql/data/
       - ./backup/pgsqllocks:/data/backup
 
-  rabbitmqrobot:
+  rabbitmq:
     image: rabbitmq
     container_name: rabbitmqrobot
     hostname: rabbitmq
-    # hostname: rabbitmqrobot
     networks:
       mgmt:
 
@@ -96,6 +95,7 @@ services:
       - /var/lib/robot/celerybeat:/opt/robot/celerybeat
       - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
       - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+      - /etc/cloudcix/pod/configs/config.json:/opt/robot/config.json
     entrypoint: supervisord
     depends_on:
       - pgsqllocks
@@ -135,6 +135,7 @@ services:
       - /etc/cloudcix/robot:/mnt/images
       - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
       - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+      - /etc/cloudcix/pod/configs/config.json:/opt/robot/config.json
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
