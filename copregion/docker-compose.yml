@@ -61,9 +61,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_APPMANAGER}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
@@ -97,9 +94,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_CIRCUIT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
@@ -133,9 +127,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_CONTACT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:15"
@@ -169,9 +160,7 @@ services:
       - PORTAL_NAME=${PORTAL_NAME}
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - SENTRY_URL=${SENTRY_URL_PORTAL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
@@ -207,9 +196,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_FINANCIAL}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     volumes:
       - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
     restart: on-failure
@@ -251,9 +237,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_IAAS}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     volumes:
       - /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
     restart: on-failure
@@ -282,9 +265,7 @@ services:
       - POD_SECRET_KEY=${POD_SECRET_KEY}
       - PORTAL_NAME=${PORTAL_NAME}
       - RELEASE=stable
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
+      - SENTRY_URL=${SENTRY_URL_LEGACYAPI}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:12"
@@ -323,9 +304,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_MEMBERSHIP}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
@@ -364,9 +342,9 @@ services:
     volumes:
       - /data/openldap/membershipldap/backup:/data/backup
 
-  nginxcop:
+  nginx1:
     image: nginx:1.19.2-alpine
-    container_name: nginxcop
+    container_name: nginx1
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:a"
@@ -376,20 +354,15 @@ services:
       - PORTAL_NAME=${PORTAL_NAME}
     ports:
       - "${PMS4}:443:443"
-      - "${PMS5}:443:443"
     volumes:
-      - ./templates/cop:/etc/nginx/templates
+      - ./templates/nginx1:/etc/nginx/templates
       - /etc/nginx/certs:/etc/nginx/certs
-      - cop_static_content:/app_framework/static
-      - leagacyapi_media_content:/application_framework/media
-      - leagacyapi_static_content:/application_framework/static
     depends_on:
       - appmanager
       - circuit
       - contact
       - financial
       - iaas
-      - legacyapi
       - membership
       - otp
       - pat
@@ -397,6 +370,29 @@ services:
       - scheduler
       - support
       - training
+
+  nginx2:
+    image: nginx:1.19.2-alpine
+    container_name: nginx2
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4005:a"
+    environment:
+      - ORGANIZATION_URL=${ORGANIZATION_URL}
+      - POD_NAME=${POD_NAME}
+      - PORTAL_NAME=${PORTAL_NAME}
+    ports:
+      - "${PMS5}:443:443"
+    volumes:
+      - ./templates/nginx2:/etc/nginx/templates
+      - /etc/nginx/certs:/etc/nginx/certs
+      - cop_static_content:/app_framework/static
+      - leagacyapi_media_content:/application_framework/media
+      - leagacyapi_private_media_content:/application_framework/private_media
+      - leagacyapi_static_content:/application_framework/static
+    depends_on:
+      - cop
+      - legacyapi
 
   otp:
     image: cloudcix/otp:${CLOUDCIX_VERSION}
@@ -424,9 +420,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_OTP}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
@@ -460,9 +453,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_PLOT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
@@ -539,9 +529,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_PLOT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:17"
@@ -630,9 +617,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_SCHEDULER}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
@@ -699,9 +683,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_PLOT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
     command: ['source_readings_delete']
@@ -732,9 +713,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_SUPPORT}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
@@ -768,9 +746,6 @@ services:
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
       - SENTRY_URL=${SENTRY_URL_TRAINING}
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
@@ -807,9 +782,6 @@ services:
       - PORTAL_NAME=${PORTAL_NAME}
       - PRODUCTION_DEPLOYMENT=${PRODUCTION_DEPLOYMENT}
       - RELEASE=stable
-      # To be deprecated
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
     command: ['user_expiration_reminders']
     volumes:
       - /home/administrator/.ssh/id_rsa:/application_framework/private-key.rsa
