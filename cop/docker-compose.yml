@@ -468,7 +468,7 @@ services:
     depends_on:
       - membership
       - iaas
-      - nginxcop
+      - nginx1
 
   plot:
     image: cloudcix/plot:${CLOUDCIX_VERSION}
