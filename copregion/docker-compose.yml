@@ -485,25 +485,6 @@ services:
       - /var/lib/pgsqltotp:/var/lib/postgresql/data/
       - ./backup/pgsqltotp:/data/backup
 
-  pit:
-    image: cloudcix/pit:latest
-    container_name: pit
-    environment:
-      - ICARUS_EMAIL=${CLOUDCIX_API_USERNAME}
-      - ICARUS_PASSWORD=${CLOUDCIX_API_PASSWORD}
-      - ICARUS_API_KEY=${CLOUDCIX_API_KEY}
-      - ICARUS_API_URL=${POD_NAME}.${ORGANIZATION_URL}
-    network_mode: "host"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:50003"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      - membership
-      - iaas
-      - nginx1
-
   plot:
     image: cloudcix/plot:${CLOUDCIX_VERSION}
     container_name: plot
