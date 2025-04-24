@@ -166,6 +166,7 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
     volumes:
       - /home/administrator/.ssh/id_rsa.pub:/app_framework/system_conf/public-key.rsa
+      - /home/administrator/.saml_certs:/app_framework/system_conf/saml_certs
       - cop_static_content:/static
     restart: on-failure
 
