@@ -405,3 +405,43 @@ server {
     ssl_certificate /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
     ssl_certificate_key /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
 }
+
+upstream keycloak {
+    server keycloak:8080;
+}
+
+server {
+    listen       443 ssl;
+    listen  [::]:443 ssl;
+    server_name  keycloak.$POD_NAME.$ORGANIZATION_URL;
+
+    # To allow special characters in headers
+    ignore_invalid_headers off;
+    # Keycloak admin console uploads are small; 10 M is sufficient
+    client_max_body_size 10M;
+    # Disable buffering – required for Keycloak's server-sent events
+    proxy_buffering off;
+
+    location / {
+        proxy_set_header Host              $http_host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_set_header X-Forwarded-Port  443;
+
+        proxy_connect_timeout 300;
+        # Keycloak token and session requests can be slow on cold start
+        proxy_read_timeout    300;
+        proxy_send_timeout    300;
+
+        # HTTP/1.1 required for keep-alive and chunked responses
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+
+        proxy_pass http://keycloak;
+    }
+
+    ssl_certificate     /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
+}

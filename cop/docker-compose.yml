@@ -28,6 +28,33 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
     volumes:
       - /data/pgadmin/backup:/data/backup
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    container_name: keycloak
+    command: start --proxy-headers xforwarded --hostname-strict false
+    environment:
+      # Admin bootstrap credentials
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      # Database (PostgreSQL – reuse existing pgsqlapi service)
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://${PGSQLAPI_HOST}:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      # Hostname / proxy
+      - KC_HOSTNAME=keycloak.${POD_NAME}.${ORGANIZATION_URL}
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HTTP_ENABLED=true          # nginx terminates TLS; KC listens on plain HTTP
+      - KC_HTTP_PORT=8080
+      # Logging
+      - KC_LOG_LEVEL=INFO
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}5002:10"
+    restart: on-failure
+    depends_on:
+      - pgsqlapi
  
   # cop
   apachedscop:
@@ -363,6 +390,7 @@ services:
       - contact
       - financial
       - iaas
+      - keycloak
       - membership
       - otp
       - plot
