@@ -2,10 +2,41 @@ networks:
   mgmt:
     driver: bridge
     enable_ipv6: true
+    attachable: true
+    driver_opts:
+      com.docker.network.bridge.gateway_mode_ipv6: "routed"
     ipam:
       config:
         - subnet: "${DOCKER_MGMT_IP6}/64"
           gateway: "${DOCKER_MGMT_IP6}1"
+
+x-common-robot-env: &common-robot-env
+  CLOUDCIX_LOCK_CREDENTIALS: ${CLOUDCIX_LOCK_CREDENTIALS}
+  CLOUDCIX_LOCK_USER: ${CLOUDCIX_LOCK_USER}
+  COP_NAME: ${COP_NAME}
+  COP_ORGANIZATION_URL: ${COP_ORGANIZATION_URL}
+  EMAIL_HOST: ${EMAIL_HOST}
+  EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+  EMAIL_PORT: ${EMAIL_PORT}
+  EMAIL_USER: ${EMAIL_USER}
+  LOGSTASH_ENABLE: ${LOGSTASH_ENABLE}
+  LOGSTASH_URL: ${LOGSTASH_URL}
+  PAT_NAME: ${PAT_NAME}
+  PAT_ORGANIZATION_URL: ${PAT_ORGANIZATION_URL}
+  POD_NAME: 'devtest'
+  PORTAL_NAME: ${PORTAL_NAME}
+  PRODUCTION_DEPLOYMENT: ${PRODUCTION_DEPLOYMENT}
+  ORGANIZATION_URL: ${ORGANIZATION_URL}
+  ROBOT_API_KEY: ${ROBOT_API_KEY}
+  ROBOT_API_PASSWORD: ${ROBOT_API_PASSWORD}
+  ROBOT_API_USERNAME: ${ROBOT_API_USERNAME}
+  SEND_TO_FAIL: ${EMAIL_REPLY_TO}
+
+x-robot-base: &robot-base
+  image: cloudcix/robot:5
+  environment: *common-robot-env
+  depends_on:
+    - pgsqllocks
 
 services:
   # common
@@ -39,7 +70,7 @@ services:
     entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
   pgsqllocks:
-    image: cloudcix/pgsqllocks:${CLOUDCIX_VERSION}
+    image: cloudcix/pgsqllocks:5
     container_name: pgsqllocks
     networks:
       mgmt:
@@ -58,91 +89,28 @@ services:
       mgmt:
 
   robot:
-    image: cloudcix/robot:${CLOUDCIX_VERSION}
+    <<: *robot-base
     container_name: robot
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}6001:1"
-    environment:
-      - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
-      - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
-      - COP_NAME=${COP_NAME}
-      - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USER=${EMAIL_USER}
-      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
-      - LOGSTASH_URL=${LOGSTASH_URL}
-      - PAT_NAME=${PAT_NAME}
-      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
-      - POD_NAME=${POD_NAME}
-      - PORTAL_NAME=${PORTAL_NAME}
-      - ORGANIZATION_URL=${ORGANIZATION_URL}
-      - ROBOT_API_KEY=${ROBOT_API_KEY}
-      - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
-      - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-      - SEND_TO_FAIL=${EMAIL_REPLY_TO}
-      # to be deprecated
-      - CEPH_MONITORS=${CEPH_MONITORS}
-      - COP_PORTAL=${PORTAL_NAME}
-      - NETWORK_PASSWORD=${NETWORK_PASSWORD}
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
-      - PODNET_CPE=${PODNET_CPE}
-      - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
-      - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
-      - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
     volumes:
-      - /var/lib/robot/celerybeat:/opt/robot/celerybeat
       - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
       - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - /etc/cloudcix/pod/configs/config.json:/opt/robot/config.json
+      - /var/lib/robot/celerybeat:/opt/robot/celerybeat
     entrypoint: supervisord
-    depends_on:
-      - pgsqllocks
 
   robotworker:
-    image: cloudcix/robot:${CLOUDCIX_VERSION}
+    <<: *robot-base
     container_name: robotworker
-    environment:
-      - CLOUDCIX_LOCK_CREDENTIALS=${CLOUDCIX_LOCK_CREDENTIALS}
-      - CLOUDCIX_LOCK_USER=${CLOUDCIX_LOCK_USER}
-      - COP_NAME=${COP_NAME}
-      - COP_ORGANIZATION_URL=${COP_ORGANIZATION_URL}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USER=${EMAIL_USER}
-      - LOGSTASH_ENABLE=${LOGSTASH_ENABLE}
-      - LOGSTASH_URL=${LOGSTASH_URL}
-      - PAT_NAME=${PAT_NAME}
-      - PAT_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
-      - POD_NAME=${POD_NAME}
-      - PORTAL_NAME=${PORTAL_NAME}
-      - ORGANIZATION_URL=${ORGANIZATION_URL}
-      - ROBOT_API_KEY=${ROBOT_API_KEY}
-      - ROBOT_API_PASSWORD=${ROBOT_API_PASSWORD}
-      - ROBOT_API_USERNAME=${ROBOT_API_USERNAME}
-      - SEND_TO_FAIL=${EMAIL_REPLY_TO}
-      # to be deprecated
-      - CEPH_MONITORS=${CEPH_MONITORS}
-      - COP_PORTAL=${PORTAL_NAME}
-      - NETWORK_PASSWORD=${NETWORK_PASSWORD}
-      - PAM_NAME=${PAT_NAME}
-      - PAM_ORGANIZATION_URL=${PAT_ORGANIZATION_URL}
-      - PODNET_CPE=${PODNET_CPE}
-      - ROUTER_PRIVATE_INTERFACE=${ROUTER_PRIVATE_INTERFACE}
-      - ROUTER_PUBLIC_INTERFACE=${ROUTER_PUBLIC_INTERFACE}
-      - ROUTER_MGMT_IP=${ROUTER_MANAGEMENT_IP}
     volumes:
-      - /etc/cloudcix/robot:/mnt/images
       - /home/administrator/.ssh/id_rsa:/root/.ssh/id_rsa
       - /home/administrator/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - /etc/cloudcix/pod/configs/config.json:/opt/robot/config.json
+      - /etc/cloudcix/robot:/mnt/images
+      - /etc/cloudcix/docker/.config/lxc:/root/.config/lxc
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}6001:2"
     entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
-    depends_on:
-      - pgsqllocks
