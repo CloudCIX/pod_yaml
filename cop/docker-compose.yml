@@ -294,7 +294,6 @@ services:
       - iaas
       - membership
       - otp
-      - pat
       - plot
       - scheduler
       - support
@@ -338,20 +337,6 @@ services:
     restart: on-failure
     depends_on:
       - pgsqltotp
-
-  pat:
-    image: cloudcix/pat:5.0
-    container_name: pat
-    environment:
-      <<: *common-env
-    networks:
-      mgmt:
-        ipv6_address: "${DOCKER_MGMT_IP6}4004:13"
-    volumes:
-      - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   pgsqlapi:
     image: cloudcix/pgsqlapi:5
@@ -457,7 +442,6 @@ services:
       - membership
       - membershipldap
       - otp
-      - pat
       - pgsqlapi
       - scheduler
       - support
