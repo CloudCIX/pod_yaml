@@ -23,9 +23,8 @@ x-common-robot-env: &common-robot-env
   LOGSTASH_URL: ${LOGSTASH_URL}
   PAT_NAME: ${PAT_NAME}
   PAT_ORGANIZATION_URL: ${PAT_ORGANIZATION_URL}
-  POD_NAME: 'devtest'
+  POD_NAME: ${POD_NAME}
   PORTAL_NAME: ${PORTAL_NAME}
-  PRODUCTION_DEPLOYMENT: ${PRODUCTION_DEPLOYMENT}
   ORGANIZATION_URL: ${ORGANIZATION_URL}
   ROBOT_API_KEY: ${ROBOT_API_KEY}
   ROBOT_API_PASSWORD: ${ROBOT_API_PASSWORD}
@@ -33,6 +32,8 @@ x-common-robot-env: &common-robot-env
   SEND_TO_FAIL: ${EMAIL_REPLY_TO}
 
 x-robot-base: &robot-base
+  mem_limit: 4g
+  restart: unless-stopped
   image: cloudcix/robot:5
   environment: *common-robot-env
   depends_on:
@@ -46,7 +47,7 @@ services:
     command: ["--reporter.grpc.host-port=${JAEGER_URL}:14250"]
     networks:
       mgmt:
-    restart: on-failure
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4
