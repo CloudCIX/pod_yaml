@@ -40,6 +40,9 @@ x-common-env: &common-env
 x-base-service: &base-service
   mem_limit: 4g
   restart: unless-stopped
+
+x-api-base: &api-base
+  <<: *base-service
   depends_on:
     - pgsqlapi
 
@@ -61,7 +64,7 @@ x-common-routine-env: &common-routine-env
   PORTAL_NAME: ${PORTAL_NAME}
 
 x-routine-base: &routine-base
-  <<: *base-service
+  <<: *api-base
   image: cloudcix/routine:3
   environment: *common-routine-env
 
@@ -97,7 +100,7 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
 
   appmanager:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/appmanager:5
     container_name: appmanager
     environment:
@@ -109,7 +112,7 @@ services:
       - *ssh-pub
 
   circuit:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/circuit:5
     container_name: circuit
     environment:
@@ -121,7 +124,7 @@ services:
       - *ssh-pub
 
   contact:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/contact:5
     container_name: contact
     environment:
@@ -133,7 +136,7 @@ services:
       - *ssh-pub
 
   cop:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/cop:5
     container_name: cop
     environment:
@@ -156,7 +159,7 @@ services:
       mgmt:
 
   financial:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/financial:5
     container_name: financial
     networks:
@@ -177,7 +180,7 @@ services:
     entrypoint: flower --port=5555 --broker=amqp://rabbitmqroutine:5672/
 
   helpdesk:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/helpdesk:5
     container_name: helpdesk
     environment:
@@ -189,7 +192,7 @@ services:
       - *ssh-pub
 
   iaas:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/iaas:5
     container_name: iaas
     networks:
@@ -201,7 +204,7 @@ services:
       - *ssh-pub
   
   legacyapi:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/legacyapi:4
     container_name: legacyapi
     environment:
@@ -216,7 +219,7 @@ services:
       - *ssh-pub
 
   membership:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/membership:5
     container_name: membership
     environment:
@@ -315,7 +318,7 @@ services:
       - legacyapi
 
   otp:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/otp:5
     container_name: otp
     environment:
@@ -357,7 +360,7 @@ services:
       - ./backup/pgsqltotp:/data/backup
 
   plot:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/plot:5
     container_name: plot
     environment:
@@ -395,7 +398,7 @@ services:
     entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
 
   scheduler:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/scheduler:5
     container_name: scheduler
     environment:
@@ -450,7 +453,7 @@ services:
       - *ssh-pub
 
   support:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/support:5
     container_name: support
     environment:
@@ -462,7 +465,7 @@ services:
       - *ssh-pub
 
   training:
-    <<: *base-service
+    <<: *api-base
     image: cloudcix/training:5
     container_name: training
     environment:
