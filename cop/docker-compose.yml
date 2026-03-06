@@ -35,12 +35,16 @@ x-common-env: &common-env
   POD_NAME: ${POD_NAME}
   POD_SECRET_KEY: ${POD_SECRET_KEY}
   PORTAL_NAME: ${PORTAL_NAME}
-  PRODUCTION_DEPLOYMENT: ${PRODUCTION_DEPLOYMENT}
   RELEASE: stable
 
 x-base-service: &base-service
-  environment: *common-env
-  restart: on-failure
+  mem_limit: 4g
+  restart: unless-stopped
+
+x-api-base: &api-base
+  <<: *base-service
+  depends_on:
+    - pgsqlapi
 
 x-ssh-pub: &ssh-pub  /home/administrator/.ssh/id_rsa.pub:/application_framework/public-key.rsa
 
@@ -58,9 +62,9 @@ x-common-routine-env: &common-routine-env
   ORGANIZATION_URL: ${ORGANIZATION_URL}
   POD_NAME: ${POD_NAME}
   PORTAL_NAME: ${PORTAL_NAME}
-  PRODUCTION_DEPLOYMENT: ${PRODUCTION_DEPLOYMENT}
 
 x-routine-base: &routine-base
+  <<: *api-base
   image: cloudcix/routine:3
   environment: *common-routine-env
 
@@ -72,7 +76,7 @@ services:
     command: ["--reporter.grpc.host-port=${JAEGER_URL}:14250"]
     networks:
       mgmt:
-    restart: on-failure
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4
@@ -85,6 +89,7 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
     volumes:
       - /data/pgadmin/backup:/data/backup
+    restart: unless-stopped
 
   # cop
   apachedscop:
@@ -95,6 +100,7 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}5002:2"
 
   appmanager:
+    <<: *api-base
     image: cloudcix/appmanager:5
     container_name: appmanager
     environment:
@@ -104,11 +110,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:4"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   circuit:
+    <<: *api-base
     image: cloudcix/circuit:5
     container_name: circuit
     environment:
@@ -118,11 +122,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:11"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   contact:
+    <<: *api-base
     image: cloudcix/contact:5
     container_name: contact
     environment:
@@ -132,11 +134,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:15"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   cop:
+    <<: *api-base
     image: cloudcix/cop:5
     container_name: cop
     environment:
@@ -149,9 +149,9 @@ services:
       - /home/administrator/.saml_certs:/app_framework/system_conf/saml_certs
       - cop_static_content:/static
       - /home/administrator/.ssh/id_rsa.pub:/app_framework/system_conf/public-key.rsa
-    restart: on-failure
 
   copmemcached:
+    <<: *base-service
     image: memcached:latest
     container_name: copmemcached
     command: memcached -I 5m
@@ -159,6 +159,7 @@ services:
       mgmt:
 
   financial:
+    <<: *api-base
     image: cloudcix/financial:5
     container_name: financial
     networks:
@@ -168,11 +169,9 @@ services:
       <<: *common-env
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
     
   flowerroutine:
+    <<: *base-service
     image: mher/flower:0.9.5
     container_name: flowerroutine
     networks:
@@ -181,6 +180,7 @@ services:
     entrypoint: flower --port=5555 --broker=amqp://rabbitmqroutine:5672/
 
   helpdesk:
+    <<: *api-base
     image: cloudcix/helpdesk:5
     container_name: helpdesk
     environment:
@@ -190,11 +190,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:18"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   iaas:
+    <<: *api-base
     image: cloudcix/iaas:5
     container_name: iaas
     networks:
@@ -204,11 +202,9 @@ services:
       <<: *common-env
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
   
   legacyapi:
+    <<: *api-base
     image: cloudcix/legacyapi:4
     container_name: legacyapi
     environment:
@@ -221,11 +217,9 @@ services:
       - legacyapi_private_media_content:/private_media
       - legacyapi_static_content:/static
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   membership:
+    <<: *api-base
     image: cloudcix/membership:5
     container_name: membership
     environment:
@@ -238,7 +232,6 @@ services:
     volumes:
       - /home/administrator/.ssh/id_rsa:/application_framework/private-key.rsa
       - *ssh-pub
-    restart: on-failure
     depends_on:
       - pgsqlapi
       - membershipldap
@@ -271,6 +264,7 @@ services:
       - /data/openldap/membershipldap/backup:/data/backup
 
   nginx1:
+    <<: *base-service
     image: nginx:1.19.2-alpine
     container_name: nginx1
     networks:
@@ -300,6 +294,7 @@ services:
       - training
 
   nginx2:
+    <<: *base-service
     image: nginx:1.19.2-alpine
     container_name: nginx2
     networks:
@@ -323,6 +318,7 @@ services:
       - legacyapi
 
   otp:
+    <<: *api-base
     image: cloudcix/otp:5
     container_name: otp
     environment:
@@ -334,11 +330,11 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:2"
     volumes:
       - *ssh-pub
-    restart: on-failure
     depends_on:
       - pgsqltotp
 
   pgsqlapi:
+    <<: *base-service
     image: cloudcix/pgsqlapi:5
     container_name: pgsqlapi
     networks:
@@ -351,6 +347,7 @@ services:
       - ./backup/pgsqlapi:/data/backup
     
   pgsqltotp:
+    <<: *base-service
     image: cloudcix/pgsqltotp:5
     container_name: pgsqltotp
     networks:
@@ -363,6 +360,7 @@ services:
       - ./backup/pgsqltotp:/data/backup
 
   plot:
+    <<: *api-base
     image: cloudcix/plot:5
     container_name: plot
     environment:
@@ -372,11 +370,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:17"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   rabbitmqroutine:
+    <<: *base-service
     image: rabbitmq
     container_name: rabbitmqroutine
     hostname: rabbitmqroutine
@@ -402,6 +398,7 @@ services:
     entrypoint: celery -A celery_app -l info worker -Q celery -O fair -n ${POD_NAME} --concurrency 25
 
   scheduler:
+    <<: *api-base
     image: cloudcix/scheduler:5
     container_name: scheduler
     environment:
@@ -411,9 +408,6 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:7"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   seed_pgsql:
     image: cloudcix/seed:3
@@ -459,6 +453,7 @@ services:
       - *ssh-pub
 
   support:
+    <<: *api-base
     image: cloudcix/support:5
     container_name: support
     environment:
@@ -468,11 +463,9 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   training:
+    <<: *api-base
     image: cloudcix/training:5
     container_name: training
     environment:
@@ -482,9 +475,6 @@ services:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:5"
     volumes:
       - *ssh-pub
-    restart: on-failure
-    depends_on:
-      - pgsqlapi
 
   user_expiration_cron:
     image: cloudcix/membershipcron:5

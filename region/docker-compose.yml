@@ -23,16 +23,20 @@ x-common-robot-env: &common-robot-env
   LOGSTASH_URL: ${LOGSTASH_URL}
   PAT_NAME: ${PAT_NAME}
   PAT_ORGANIZATION_URL: ${PAT_ORGANIZATION_URL}
-  POD_NAME: 'devtest'
+  POD_NAME: ${POD_NAME}
   PORTAL_NAME: ${PORTAL_NAME}
-  PRODUCTION_DEPLOYMENT: ${PRODUCTION_DEPLOYMENT}
   ORGANIZATION_URL: ${ORGANIZATION_URL}
   ROBOT_API_KEY: ${ROBOT_API_KEY}
   ROBOT_API_PASSWORD: ${ROBOT_API_PASSWORD}
   ROBOT_API_USERNAME: ${ROBOT_API_USERNAME}
   SEND_TO_FAIL: ${EMAIL_REPLY_TO}
 
+x-base-service: &base-service
+  mem_limit: 4g
+  restart: unless-stopped
+
 x-robot-base: &robot-base
+  <<: *base-service
   image: cloudcix/robot:5
   environment: *common-robot-env
   depends_on:
@@ -41,14 +45,16 @@ x-robot-base: &robot-base
 services:
   # common
   jaeger:
+    <<: *base-service
     image: jaegertracing/jaeger-agent:latest
     container_name: jaeger-agent
     command: ["--reporter.grpc.host-port=${JAEGER_URL}:14250"]
     networks:
       mgmt:
-    restart: on-failure
+    restart: unless-stopped
 
   pgadmin:
+    <<: *base-service
     image: dpage/pgadmin4
     container_name: pgadmin
     networks:
@@ -62,6 +68,7 @@ services:
 
   # region
   flowerrobot:
+    <<: *base-service
     image: mher/flower:0.9.5
     container_name: flowerrobot
     networks:
@@ -70,6 +77,7 @@ services:
     entrypoint: flower --port=5555 --broker=amqp://rabbitmq:5672/
 
   pgsqllocks:
+    <<: *base-service
     image: cloudcix/pgsqllocks:5
     container_name: pgsqllocks
     networks:
@@ -82,6 +90,7 @@ services:
       - ./backup/pgsqllocks:/data/backup
 
   rabbitmq:
+    <<: *base-service
     image: rabbitmq
     container_name: rabbitmqrobot
     hostname: rabbitmq
