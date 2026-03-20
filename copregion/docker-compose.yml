@@ -309,7 +309,6 @@ services:
     depends_on:
       - appmanager
       - circuit
-      - compute
       - contact
       - financial
       - helpdesk
@@ -339,9 +338,9 @@ services:
       - ./templates/nginx2:/etc/nginx/templates
       - /etc/nginx/certs:/etc/nginx/certs
       - cop_static_content:/app_framework/static
-      - leagacyapi_media_content:/application_framework/media
-      - leagacyapi_private_media_content:/application_framework/private_media
-      - leagacyapi_static_content:/application_framework/static
+      - legacyapi_media_content:/application_framework/media
+      - legacyapi_private_media_content:/application_framework/private_media
+      - legacyapi_static_content:/application_framework/static
     depends_on:
       - cop
       - legacyapi
