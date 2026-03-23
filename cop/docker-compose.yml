@@ -123,6 +123,18 @@ services:
     volumes:
       - *ssh-pub
 
+  compute:
+    <<: *api-base
+    image: cloudcix/compute:5
+    container_name: compute
+    environment:
+      <<: *common-env
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:19"
+    volumes:
+      - *ssh-pub
+
   contact:
     <<: *api-base
     image: cloudcix/contact:5
@@ -281,6 +293,7 @@ services:
     depends_on:
       - appmanager
       - circuit
+      - compute
       - contact
       - financial
       - helpdesk
