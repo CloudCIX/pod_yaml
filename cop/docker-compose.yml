@@ -123,6 +123,18 @@ services:
     volumes:
       - *ssh-pub
 
+  compute:
+    <<: *api-base
+    image: cloudcix/compute:5
+    container_name: compute
+    environment:
+      <<: *common-env
+    networks:
+      mgmt:
+        ipv6_address: "${DOCKER_MGMT_IP6}4004:19"
+    volumes:
+      - *ssh-pub
+
   contact:
     <<: *api-base
     image: cloudcix/contact:5
@@ -310,9 +322,9 @@ services:
       - ./templates/nginx2:/etc/nginx/templates
       - /etc/nginx/certs:/etc/nginx/certs
       - cop_static_content:/app_framework/static
-      - leagacyapi_media_content:/application_framework/media
-      - leagacyapi_private_media_content:/application_framework/private_media
-      - leagacyapi_static_content:/application_framework/static
+      - legacyapi_media_content:/application_framework/media
+      - legacyapi_private_media_content:/application_framework/private_media
+      - legacyapi_static_content:/application_framework/static
     depends_on:
       - cop
       - legacyapi
