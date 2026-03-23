@@ -466,7 +466,7 @@ services:
 
   support:
     <<: *api-base
-    image: cloudcix/support:5
+    image: cloudcix/support:4
     container_name: support
     environment:
       <<: *common-env
