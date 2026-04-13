@@ -462,7 +462,7 @@ services:
       - *ssh-pub
 
   seed_pgsql:
-    image: cloudcix/seed:3
+    image: cloudcix/seed:5
     container_name: seed_pgsql
     networks:
       mgmt:
