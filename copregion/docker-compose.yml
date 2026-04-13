@@ -242,7 +242,7 @@ services:
       <<: *common-env
     volumes:
       - *ssh-pub
-  
+
   legacyapi:
     <<: *api-base
     image: cloudcix/legacyapi:4
@@ -331,7 +331,6 @@ services:
       - pat
       - plot
       - scheduler
-      - support
       - training
 
   nginx2:
@@ -492,7 +491,6 @@ services:
       - pat
       - pgsqlapi
       - scheduler
-      - support
       - training
 
   source_readings_cron:
@@ -503,18 +501,6 @@ services:
     networks:
       mgmt:
     command: ['source_readings_delete']
-    volumes:
-      - *ssh-pub
-
-  support:
-    <<: *api-base
-    image: cloudcix/support:4
-    container_name: support
-    environment:
-      <<: *common-env
-    networks:
-      mgmt:
-        ipv6_address: "${DOCKER_MGMT_IP6}4004:10"
     volumes:
       - *ssh-pub
 
