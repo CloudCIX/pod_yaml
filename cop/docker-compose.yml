@@ -153,7 +153,7 @@ services:
     container_name: cop
     environment:
       <<: *common-env
-      POD_ID: ${POD_ID}
+      POD_NUMBER: ${POD_NUMBER}
     networks:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}5002:4"
