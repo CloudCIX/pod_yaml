@@ -37,8 +37,8 @@ server {
         proxy_pass http://cop;
     }
 
-    ssl_certificate /etc/nginx/certs/$PORTAL_NAME.$ORGANIZATION_URL/fullchain.pem;
-    ssl_certificate_key /etc/nginx/certs/$PORTAL_NAME.$ORGANIZATION_URL/privkey.pem;
+    ssl_certificate /etc/nginx/certs/live/$PORTAL_NAME.$ORGANIZATION_URL/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/live/$PORTAL_NAME.$ORGANIZATION_URL/privkey.pem;
 }
 
 upstream legacyapi {
@@ -95,8 +95,8 @@ server {
         proxy_pass http://legacyapi;
     }
 
-    ssl_certificate /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
-    ssl_certificate_key /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
+    ssl_certificate /etc/nginx/certs/live/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/live/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
 }
 
 server {
@@ -111,8 +111,8 @@ server {
     listen [::]:443 ssl default_server;
     server_name _;
 
-    ssl_certificate /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
-    ssl_certificate_key /etc/nginx/certs/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
+    ssl_certificate /etc/nginx/certs/live/$POD_NAME.$ORGANIZATION_URL/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/live/$POD_NAME.$ORGANIZATION_URL/privkey.pem;
 
     return 444;
 }

@@ -289,7 +289,7 @@ services:
       - "${PMS4}:443:443"
     volumes:
       - ./templates/nginx1:/etc/nginx/templates
-      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/letsencrypt:/etc/nginx/certs:ro
     depends_on:
       - appmanager
       - circuit
@@ -319,7 +319,7 @@ services:
       - "${PMS5}:443:443"
     volumes:
       - ./templates/nginx2:/etc/nginx/templates
-      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/letsencrypt:/etc/nginx/certs:ro
       - cop_static_content:/app_framework/static
       - legacyapi_media_content:/application_framework/media
       - legacyapi_private_media_content:/application_framework/private_media
