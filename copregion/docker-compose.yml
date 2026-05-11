@@ -93,7 +93,7 @@ x-common-routine-env: &common-routine-env
 
 x-routine-base: &routine-base
   <<: *api-base
-  image: cloudcix/routine:3
+  image: cloudcix/routine:5
   environment: *common-routine-env
 
 services:
@@ -188,7 +188,7 @@ services:
     volumes:
       - /home/administrator/.saml_certs:/app_framework/system_conf/saml_certs
       - cop_static_content:/static
-      - /home/administrator/.ssh/id_rsa.pub:/app_framework/system_conf/public-key.rsa
+      - /etc/cloudcix/docker/.config/cop/cloudcix_client.pub:/app_framework/system_conf/public-key.rsa
 
   copmemcached:
     <<: *base-service
@@ -270,7 +270,7 @@ services:
       mgmt:
         ipv6_address: "${DOCKER_MGMT_IP6}4004:1"
     volumes:
-      - /etc/cloudcix/docker/.config/cop/cloudcix_client:/application_framework/public-key.rsa
+      - /etc/cloudcix/docker/.config/cop/cloudcix_client:/application_framework/private-key.rsa
       - *ssh-pub
     depends_on:
       - pgsqlapi
@@ -527,7 +527,7 @@ services:
       MEMBERSHIPLDAP_PASSWORD: ${MEMBERSHIPLDAP_PASSWORD}
     command: ['user_expiration_reminders']
     volumes:
-      - /etc/cloudcix/docker/.config/cop/cloudcix_client:/application_framework/public-key.rsa
+      - /etc/cloudcix/docker/.config/cop/cloudcix_client:/application_framework/private-key.rsa
       - *ssh-pub
 
   # region
